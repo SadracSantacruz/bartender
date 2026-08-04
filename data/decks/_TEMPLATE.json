@@ -1,0 +1,27 @@
+{
+  "id": "example-bar",
+  "name": "Example Bar Name",
+  "description": "One line describing this menu — e.g. 'Downtown location, spring 2026 menu'.",
+  "tierLabels": {
+    "1": "Signature Menu",
+    "2": "Wall Card",
+    "3": "Off Menu"
+  },
+  "drinks": [
+    {
+      "id": "example-drink",
+      "name": "Example Drink",
+      "tier": 1,
+      "category": "Vodka",
+      "base": "2oz house vodka",
+      "ingredients": ["1oz lime juice", "3/4oz simple syrup", "splash soda water"],
+      "glass": "rocks glass",
+      "serve": "rocks",
+      "rim": "none",
+      "garnish": "lime wheel",
+      "prep": "Shake spirit and juices with ice, strain over fresh ice, top with soda.",
+      "notes": "Optional free-text notes, omit this field entirely if you have none.",
+      "verify": ""
+    }
+  ]
+}
