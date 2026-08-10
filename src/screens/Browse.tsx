@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore } from "../store/appStore";
 import { useProgressStore } from "../store/progressStore";
 import { getFilteredDrinks, type DeckDrink } from "../lib/quiz";
 import { baseColorFor, baseGroupFor } from "../lib/baseColors";
+import { DRINK_FIELDS, type DrinkField } from "../types";
 
 const TIER_STYLES: Record<number, string> = {
   1: "border-emerald-700 bg-emerald-950/60 text-emerald-300",
@@ -13,15 +14,29 @@ const TIER_STYLES: Record<number, string> = {
 };
 const TIER_FALLBACK = "border-neutral-700 bg-neutral-800/60 text-neutral-300";
 
+const FIELD_LABELS: Record<DrinkField, string> = {
+  base: "Base",
+  glass: "Glass",
+  serve: "Serve",
+  rim: "Rim",
+  garnish: "Garnish",
+  ingredients: "Ingredients",
+  prep: "Prep",
+};
+
 export default function Browse() {
   const selectedDeckIds = useAppStore((s) => s.selectedDeckIds);
   const tierFilter = useAppStore((s) => s.tierFilter);
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const savedDrinks = useProgressStore((s) => s.savedDrinks);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
   const [query, setQuery] = useState("");
   const [baseGroup, setBaseGroup] = useState<string | "all">("all");
   const [category, setCategory] = useState<string | "all">("all");
+  const [deckId, setDeckId] = useState<string | "all">("all");
   const [savedOnly, setSavedOnly] = useState(false);
+  const [skippedOnly, setSkippedOnly] = useState(false);
+  const [hideSkipped, setHideSkipped] = useState(false);
 
   const decks = useMemo(
     () => LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck),
@@ -48,11 +63,16 @@ export default function Browse() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return pool.filter(({ deck, drink }) => {
-      if (savedOnly && !savedDrinks[`${deck.id}:${drink.id}`]) return false;
+      const key = `${deck.id}:${drink.id}`;
+      if (deckId !== "all" && deck.id !== deckId) return false;
+      if (savedOnly && !savedDrinks[key]) return false;
+      if (skippedOnly && !skippedDrinks[key]) return false;
+      if (hideSkipped && skippedDrinks[key]) return false;
       if (baseGroup !== "all" && baseGroupFor(drink.base) !== baseGroup) return false;
       if (category !== "all" && drink.category !== category) return false;
       if (!q) return true;
       if (drink.name.toLowerCase().includes(q)) return true;
+      if (deck.name.toLowerCase().includes(q)) return true;
       if (drink.category.toLowerCase().includes(q)) return true;
       if (drink.base.toLowerCase().includes(q)) return true;
       if (drink.glass.toLowerCase().includes(q)) return true;
@@ -60,7 +80,18 @@ export default function Browse() {
       if (drink.ingredients.some((i) => i.toLowerCase().includes(q))) return true;
       return false;
     });
-  }, [pool, query, baseGroup, category, savedOnly, savedDrinks]);
+  }, [
+    pool,
+    query,
+    baseGroup,
+    category,
+    deckId,
+    savedOnly,
+    savedDrinks,
+    skippedOnly,
+    hideSkipped,
+    skippedDrinks,
+  ]);
 
   if (pool.length === 0) {
     return (
@@ -74,6 +105,7 @@ export default function Browse() {
   }
 
   const savedCount = pool.filter(({ deck, drink }) => savedDrinks[`${deck.id}:${drink.id}`]).length;
+  const skippedCount = pool.filter(({ deck, drink }) => skippedDrinks[`${deck.id}:${drink.id}`]).length;
 
   return (
     <Layout title="Browse">
@@ -85,6 +117,21 @@ export default function Browse() {
         placeholder="Search name, category, base, glass, garnish, ingredient..."
         className="mb-3 min-h-[52px] w-full rounded-lg border border-neutral-800 bg-neutral-900/50 px-4 py-3 text-base text-neutral-100 placeholder-neutral-500 outline-none focus:border-emerald-600"
       />
+
+      {decks.length > 1 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          <FilterChip active={deckId === "all"} onClick={() => setDeckId("all")} label="All decks" />
+          {decks.map((d) => (
+            <FilterChip
+              key={d.id}
+              active={deckId === d.id}
+              onClick={() => setDeckId(deckId === d.id ? "all" : d.id)}
+              label={d.name}
+              activeClass="border-fuchsia-600 bg-fuchsia-900/40 text-fuchsia-300"
+            />
+          ))}
+        </div>
+      )}
 
       <div className="mb-2 flex flex-wrap gap-2">
         <FilterChip
@@ -121,12 +168,29 @@ export default function Browse() {
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="mb-3 flex flex-wrap gap-2">
         <FilterChip
           active={savedOnly}
-          onClick={() => setSavedOnly(!savedOnly)}
+          onClick={() => {
+            setSavedOnly(!savedOnly);
+            if (!savedOnly) setSkippedOnly(false);
+          }}
           label={`★ Saved only (${savedCount})`}
           activeClass="border-sky-600 bg-sky-900/40 text-sky-300"
+        />
+        <FilterChip
+          active={skippedOnly}
+          onClick={() => {
+            setSkippedOnly(!skippedOnly);
+            if (!skippedOnly) setSavedOnly(false);
+          }}
+          label={`🚫 Skipped only (${skippedCount})`}
+          activeClass="border-neutral-500 bg-neutral-800 text-neutral-200"
+        />
+        <FilterChip
+          active={hideSkipped}
+          onClick={() => setHideSkipped(!hideSkipped)}
+          label="Hide skipped"
         />
       </div>
 
@@ -138,7 +202,9 @@ export default function Browse() {
         <p className="text-neutral-400">
           {savedOnly
             ? "No saved drinks match. Tap the ☆ on a drink card to save it for later."
-            : "Nothing matches those filters."}
+            : skippedOnly
+              ? "No skipped drinks match. Tap 🚫 on a drink card to mark it as \"don't need to know.\""
+              : "Nothing matches those filters."}
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-3">
@@ -153,12 +219,32 @@ export default function Browse() {
 
 function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
   const { deck, drink } = deckDrink;
+  const key = `${deck.id}:${drink.id}`;
   const toggleSaved = useProgressStore((s) => s.toggleSaved);
-  const saved = useProgressStore((s) => !!s.savedDrinks[`${deck.id}:${drink.id}`]);
+  const saved = useProgressStore((s) => !!s.savedDrinks[key]);
+  const toggleSkipped = useProgressStore((s) => s.toggleSkipped);
+  const skipped = useProgressStore((s) => !!s.skippedDrinks[key]);
+  const setPersonalNote = useProgressStore((s) => s.setPersonalNote);
+  const storedNote = useProgressStore((s) => s.personalNotes[key] ?? "");
+  const shakyFields = useProgressStore((s) => s.shakyFields[key] ?? []);
+  const toggleShakyField = useProgressStore((s) => s.toggleShakyField);
   const color = baseColorFor(drink.base);
 
+  const [noteDraft, setNoteDraft] = useState(storedNote);
+  useEffect(() => {
+    setNoteDraft(storedNote);
+  }, [storedNote]);
+
+  function commitNote() {
+    if (noteDraft !== storedNote) setPersonalNote(deck.id, drink.id, noteDraft);
+  }
+
   return (
-    <div className={`rounded-lg border border-neutral-800 border-l-4 bg-neutral-900/50 p-4 ${color.border}`}>
+    <div
+      className={`rounded-lg border border-neutral-800 border-l-4 bg-neutral-900/50 p-4 ${color.border} ${
+        skipped ? "opacity-50" : ""
+      }`}
+    >
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <h3 className="text-lg font-semibold">{drink.name}</h3>
         {drink.verify && (
@@ -166,21 +252,43 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
             unverified
           </span>
         )}
-        <button
-          type="button"
-          onClick={() => toggleSaved(deck.id, drink.id)}
-          title={saved ? "Remove from saved" : "Save as still learning"}
-          className={`ml-auto rounded-lg border px-2.5 py-1 text-sm ${
-            saved
-              ? "border-sky-600 bg-sky-900/40 text-sky-300"
-              : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
-          }`}
-        >
-          {saved ? "★ Saved" : "☆ Save"}
-        </button>
+        {skipped && (
+          <span className="rounded border border-neutral-600 bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-300">
+            skipped
+          </span>
+        )}
+        <div className="ml-auto flex gap-2">
+          <button
+            type="button"
+            onClick={() => toggleSaved(deck.id, drink.id)}
+            title={saved ? "Remove from saved" : "Save as still learning"}
+            className={`rounded-lg border px-2.5 py-1 text-sm ${
+              saved
+                ? "border-sky-600 bg-sky-900/40 text-sky-300"
+                : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
+            }`}
+          >
+            {saved ? "★ Saved" : "☆ Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSkipped(deck.id, drink.id)}
+            title={skipped ? "Include this in quizzes again" : "Don't need to know this — exclude from quizzes"}
+            className={`rounded-lg border px-2.5 py-1 text-sm ${
+              skipped
+                ? "border-neutral-500 bg-neutral-800 text-neutral-200"
+                : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
+            }`}
+          >
+            {skipped ? "🚫 Skipped" : "🚫 Skip"}
+          </button>
+        </div>
       </div>
 
       <div className="mb-2 flex flex-wrap gap-1.5">
+        <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
+          {deck.name}
+        </span>
         <span className={`rounded border px-1.5 py-0.5 text-xs ${TIER_STYLES[drink.tier] ?? TIER_FALLBACK}`}>
           Tier {drink.tier}
         </span>
@@ -221,6 +329,37 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
           {drink.verify}
         </p>
       )}
+
+      <div className="mt-3 border-t border-neutral-800 pt-3">
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-xs text-neutral-500">Shaky on:</span>
+          {DRINK_FIELDS.map((field) => {
+            const active = shakyFields.includes(field);
+            return (
+              <button
+                key={field}
+                type="button"
+                onClick={() => toggleShakyField(deck.id, drink.id, field)}
+                className={`rounded-full border px-2 py-0.5 text-xs ${
+                  active
+                    ? "border-amber-600 bg-amber-900/40 text-amber-300"
+                    : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600"
+                }`}
+              >
+                {FIELD_LABELS[field]}
+              </button>
+            );
+          })}
+        </div>
+        <textarea
+          value={noteDraft}
+          onChange={(e) => setNoteDraft(e.target.value)}
+          onBlur={commitNote}
+          placeholder="Personal note — e.g. 'confused vodka for tequila', 'forgot the cherry garnish'..."
+          rows={2}
+          className="w-full rounded-lg border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 outline-none focus:border-neutral-600"
+        />
+      </div>
     </div>
   );
 }

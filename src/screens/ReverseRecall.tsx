@@ -76,11 +76,12 @@ export default function ReverseRecall() {
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const navigate = useAppStore((s) => s.navigate);
   const recordResult = useProgressStore((s) => s.recordResult);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
 
   const pool = useMemo(() => {
     const decks = LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck);
-    return getFilteredDrinks(decks, tierFilter, categoryFilter);
-  }, [selectedDeckIds, tierFilter, categoryFilter]);
+    return getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks);
+  }, [selectedDeckIds, tierFilter, categoryFilter, skippedDrinks]);
 
   const [round, setRound] = useState<DeckDrink[]>(() => buildRound(pool));
   const [index, setIndex] = useState(0);
@@ -213,7 +214,7 @@ export default function ReverseRecall() {
     );
   }
 
-  const { drink } = current;
+  const { deck, drink } = current;
 
   return (
     <Layout title="Reverse Recall">
@@ -251,14 +252,17 @@ export default function ReverseRecall() {
 
         {result === "exact" && (
           <div className="rounded-lg border border-emerald-700 bg-emerald-950/40 p-4 text-emerald-300">
-            Correct — {drink.name}
+            Correct — {drink.name} <span className="text-xs text-emerald-400/70">({deck.name})</span>
             <UnverifiedBadge drink={drink} />
           </div>
         )}
 
         {result === "wrong" && (
           <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
-            Not quite. Correct answer: <span className="font-medium">{drink.name}</span>
+            Not quite. Correct answer:{" "}
+            <span className="font-medium">
+              {drink.name} <span className="text-xs font-normal text-red-400/70">({deck.name})</span>
+            </span>
             <UnverifiedBadge drink={drink} />
           </div>
         )}
@@ -287,14 +291,17 @@ export default function ReverseRecall() {
 
         {result === "close-correct" && (
           <div className="rounded-lg border border-emerald-700 bg-emerald-950/40 p-4 text-emerald-300">
-            Marked correct — {drink.name}
+            Marked correct — {drink.name} <span className="text-xs text-emerald-400/70">({deck.name})</span>
             <UnverifiedBadge drink={drink} />
           </div>
         )}
 
         {result === "close-wrong" && (
           <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
-            Marked wrong. Correct answer: <span className="font-medium">{drink.name}</span>
+            Marked wrong. Correct answer:{" "}
+            <span className="font-medium">
+              {drink.name} <span className="text-xs font-normal text-red-400/70">({deck.name})</span>
+            </span>
             <UnverifiedBadge drink={drink} />
           </div>
         )}

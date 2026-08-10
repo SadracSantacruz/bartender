@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore } from "../store/appStore";
@@ -6,7 +6,7 @@ import { useProgressStore } from "../store/progressStore";
 import { getFilteredDrinks, getFieldValue, isFieldDocumented, shuffle } from "../lib/quiz";
 import { buildReviewPool, type ReviewEntry, type ReviewReason } from "../lib/reviewPool";
 import { baseColorFor } from "../lib/baseColors";
-import type { DrinkField } from "../types";
+import { DRINK_FIELDS, type DrinkField } from "../types";
 
 const CARD_FIELDS: Array<{ field: DrinkField; label: string }> = [
   { field: "base", label: "Base" },
@@ -16,6 +16,16 @@ const CARD_FIELDS: Array<{ field: DrinkField; label: string }> = [
   { field: "garnish", label: "Garnish" },
   { field: "prep", label: "Prep" },
 ];
+
+const FIELD_LABELS: Record<DrinkField, string> = {
+  base: "Base",
+  glass: "Glass",
+  serve: "Serve",
+  rim: "Rim",
+  garnish: "Garnish",
+  ingredients: "Ingredients",
+  prep: "Prep",
+};
 
 const REASON_STYLES: Record<ReviewReason, string> = {
   saved: "border-sky-700 bg-sky-950/60 text-sky-300",
@@ -31,11 +41,17 @@ export default function Review() {
   const recordResult = useProgressStore((s) => s.recordResult);
   const toggleSaved = useProgressStore((s) => s.toggleSaved);
   const savedDrinks = useProgressStore((s) => s.savedDrinks);
+  const toggleSkipped = useProgressStore((s) => s.toggleSkipped);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
+  const setPersonalNote = useProgressStore((s) => s.setPersonalNote);
+  const toggleShakyField = useProgressStore((s) => s.toggleShakyField);
+  const personalNotes = useProgressStore((s) => s.personalNotes);
+  const shakyFieldsMap = useProgressStore((s) => s.shakyFields);
 
   const pool = useMemo(() => {
     const decks = LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck);
-    return getFilteredDrinks(decks, tierFilter, categoryFilter);
-  }, [selectedDeckIds, tierFilter, categoryFilter]);
+    return getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks);
+  }, [selectedDeckIds, tierFilter, categoryFilter, skippedDrinks]);
 
   // Snapshot the review deck once per round so grading a card doesn't reshuffle
   // or remove cards out from under you mid-round.
@@ -45,6 +61,20 @@ export default function Review() {
   const [gotIt, setGotIt] = useState(0);
   const [stillShaky, setStillShaky] = useState(0);
   const [finished, setFinished] = useState(false);
+
+  const currentDeckDrink = round[index]?.deckDrink;
+  const currentKey = currentDeckDrink ? `${currentDeckDrink.deck.id}:${currentDeckDrink.drink.id}` : "";
+  const storedNote = personalNotes[currentKey] ?? "";
+  const [noteDraft, setNoteDraft] = useState(storedNote);
+  useEffect(() => {
+    setNoteDraft(storedNote);
+  }, [storedNote]);
+
+  function commitNote() {
+    if (currentDeckDrink && noteDraft !== storedNote) {
+      setPersonalNote(currentDeckDrink.deck.id, currentDeckDrink.drink.id, noteDraft);
+    }
+  }
 
   function buildRound(): ReviewEntry[] {
     const { getStats, isSaved } = useProgressStore.getState();
@@ -155,8 +185,10 @@ export default function Review() {
 
   const { deckDrink, reasons } = round[index];
   const { deck, drink } = deckDrink;
+  const key = `${deck.id}:${drink.id}`;
   const color = baseColorFor(drink.base);
-  const saved = !!savedDrinks[`${deck.id}:${drink.id}`];
+  const saved = !!savedDrinks[key];
+  const skipped = !!skippedDrinks[key];
   const documentedFields = CARD_FIELDS.filter(({ field }) => isFieldDocumented(drink, field));
 
   return (
@@ -177,7 +209,7 @@ export default function Review() {
 
           <h2 className="text-2xl font-semibold">{drink.name}</h2>
           <p className="mt-1 text-sm text-neutral-500">
-            Tier {drink.tier} · {drink.category}
+            {deck.name} · Tier {drink.tier} · {drink.category}
           </p>
 
           {!revealed ? (
@@ -213,17 +245,62 @@ export default function Review() {
                 </p>
               )}
 
-              <button
-                type="button"
-                onClick={() => toggleSaved(deck.id, drink.id)}
-                className={`rounded-lg border px-3 py-1.5 text-sm ${
-                  saved
-                    ? "border-sky-600 bg-sky-900/40 text-sky-300"
-                    : "border-neutral-700 bg-neutral-900/50 text-neutral-400 hover:border-neutral-600"
-                }`}
-              >
-                {saved ? "★ Saved — tap to unsave" : "☆ Save for later"}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleSaved(deck.id, drink.id)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm ${
+                    saved
+                      ? "border-sky-600 bg-sky-900/40 text-sky-300"
+                      : "border-neutral-700 bg-neutral-900/50 text-neutral-400 hover:border-neutral-600"
+                  }`}
+                >
+                  {saved ? "★ Saved — tap to unsave" : "☆ Save for later"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSkipped(deck.id, drink.id)}
+                  title="Won't show up in Review or quizzes anymore"
+                  className={`rounded-lg border px-3 py-1.5 text-sm ${
+                    skipped
+                      ? "border-neutral-500 bg-neutral-800 text-neutral-300"
+                      : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600"
+                  }`}
+                >
+                  {skipped ? "🚫 Skipped — tap to unskip" : "🚫 Don't need to know this"}
+                </button>
+              </div>
+
+              <div className="border-t border-neutral-800 pt-3">
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-xs text-neutral-500">Shaky on:</span>
+                  {DRINK_FIELDS.map((field) => {
+                    const active = (shakyFieldsMap[key] ?? []).includes(field);
+                    return (
+                      <button
+                        key={field}
+                        type="button"
+                        onClick={() => toggleShakyField(deck.id, drink.id, field)}
+                        className={`rounded-full border px-2 py-0.5 text-xs ${
+                          active
+                            ? "border-amber-600 bg-amber-900/40 text-amber-300"
+                            : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600"
+                        }`}
+                      >
+                        {FIELD_LABELS[field]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <textarea
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  onBlur={commitNote}
+                  placeholder="Personal note — e.g. 'confused vodka for tequila', 'forgot the cherry garnish'..."
+                  rows={2}
+                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 outline-none focus:border-neutral-600"
+                />
+              </div>
             </div>
           )}
         </div>

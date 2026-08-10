@@ -42,11 +42,12 @@ export default function FullBuildRecall() {
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const navigate = useAppStore((s) => s.navigate);
   const recordResult = useProgressStore((s) => s.recordResult);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
 
   const pool = useMemo(() => {
     const decks = LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck);
-    return getFilteredDrinks(decks, tierFilter, categoryFilter);
-  }, [selectedDeckIds, tierFilter, categoryFilter]);
+    return getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks);
+  }, [selectedDeckIds, tierFilter, categoryFilter, skippedDrinks]);
 
   const [round, setRound] = useState<DeckDrink[]>(() => buildRound(pool));
   const [index, setIndex] = useState(0);
@@ -171,7 +172,7 @@ export default function FullBuildRecall() {
     );
   }
 
-  const { drink } = current;
+  const { deck, drink } = current;
 
   return (
     <Layout title="Full Build Recall">
@@ -180,7 +181,12 @@ export default function FullBuildRecall() {
           Drink {index + 1} of {round.length}
         </p>
 
-        <h2 className="text-2xl font-semibold">{drink.name}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-2xl font-semibold">{drink.name}</h2>
+          <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
+            {deck.name}
+          </span>
+        </div>
 
         <div className="space-y-3">
           {documentedFields.map((field, i) => (

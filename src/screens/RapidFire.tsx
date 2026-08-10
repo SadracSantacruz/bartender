@@ -88,11 +88,12 @@ export default function RapidFire() {
   const tierFilter = useAppStore((s) => s.tierFilter);
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const recordResult = useProgressStore((s) => s.recordResult);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
 
   const pool = useMemo(() => {
     const decks = LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck);
-    return getFilteredDrinks(decks, tierFilter, categoryFilter);
-  }, [selectedDeckIds, tierFilter, categoryFilter]);
+    return getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks);
+  }, [selectedDeckIds, tierFilter, categoryFilter, skippedDrinks]);
 
   const [bank, setBank] = useState<InvertedQuestion[]>(() => buildQuestionBank(pool));
   const [bankIndex, setBankIndex] = useState(0);

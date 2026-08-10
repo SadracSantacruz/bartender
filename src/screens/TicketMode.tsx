@@ -43,11 +43,12 @@ export default function TicketMode() {
   const tierFilter = useAppStore((s) => s.tierFilter);
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const recordResult = useProgressStore((s) => s.recordResult);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
 
   const pool = useMemo(() => {
     const decks = LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck);
-    return getFilteredDrinks(decks, tierFilter, categoryFilter);
-  }, [selectedDeckIds, tierFilter, categoryFilter]);
+    return getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks);
+  }, [selectedDeckIds, tierFilter, categoryFilter, skippedDrinks]);
 
   const [tickets, setTickets] = useState<DeckDrink[]>(() =>
     pool.length > 0 ? pickRandom(pool, pickTicketCount(pool.length)) : []
@@ -243,6 +244,11 @@ export default function TicketMode() {
           <div className="mb-1 text-xs uppercase tracking-widest text-neutral-500">Ticket</div>
           <div className="font-mono text-2xl font-semibold text-neutral-100">
             {current?.drink.name}
+            {current ? (
+              <span className="ml-2 align-middle rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs font-sans text-fuchsia-300">
+                {current.deck.name}
+              </span>
+            ) : null}
             {current?.drink.verify ? (
               <span className="ml-2 align-middle rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs font-sans text-amber-400">
                 unverified

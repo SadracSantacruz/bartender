@@ -5,17 +5,24 @@ export interface DeckDrink {
   drink: Drink;
 }
 
-/** Flatten selected decks into (deck, drink) pairs, filtered by tier/category. */
+/**
+ * Flatten selected decks into (deck, drink) pairs, filtered by tier/category.
+ * Pass `skipped` (from `useProgressStore`) to additionally drop drinks the
+ * user flagged as "don't need to memorize" — omit it (e.g. in Browse) to keep
+ * skipped drinks in the pool for management purposes.
+ */
 export function getFilteredDrinks(
   decks: Deck[],
   tierFilter: number | "all",
-  categoryFilter: string | "all"
+  categoryFilter: string | "all",
+  skipped?: Record<string, true>
 ): DeckDrink[] {
   const result: DeckDrink[] = [];
   for (const deck of decks) {
     for (const drink of deck.drinks) {
       if (tierFilter !== "all" && drink.tier !== tierFilter) continue;
       if (categoryFilter !== "all" && drink.category !== categoryFilter) continue;
+      if (skipped?.[`${deck.id}:${drink.id}`]) continue;
       result.push({ deck, drink });
     }
   }

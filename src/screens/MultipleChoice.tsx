@@ -21,6 +21,7 @@ const QUIZ_FIELDS: DrinkField[] = DRINK_FIELDS.filter((f) => f !== "ingredients"
 interface Question {
   key: string;
   deckId: string;
+  deckName: string;
   drinkId: string;
   drinkName: string;
   field: DrinkField;
@@ -111,6 +112,7 @@ function generateRound(
     questions.push({
       key: `${qKey}:${questions.length}`,
       deckId: deck.id,
+      deckName: deck.name,
       drinkId: drink.id,
       drinkName: drink.name,
       field,
@@ -136,6 +138,7 @@ export default function MultipleChoice() {
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const recordResult = useProgressStore((s) => s.recordResult);
   const weightFor = useProgressStore((s) => s.weightFor);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
 
   const decks = useMemo(
     () => LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck),
@@ -143,8 +146,8 @@ export default function MultipleChoice() {
   );
 
   const pool = useMemo(
-    () => getFilteredDrinks(decks, tierFilter, categoryFilter),
-    [decks, tierFilter, categoryFilter]
+    () => getFilteredDrinks(decks, tierFilter, categoryFilter, skippedDrinks),
+    [decks, tierFilter, categoryFilter, skippedDrinks]
   );
 
   const [questions, setQuestions] = useState<Question[]>(() => generateRound(pool, weightFor));
@@ -295,6 +298,9 @@ export default function MultipleChoice() {
       <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-semibold">{current.drinkName}</h2>
+          <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
+            {current.deckName}
+          </span>
           {current.verify && (
             <span className="rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs text-amber-400">
               unverified

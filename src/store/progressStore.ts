@@ -46,6 +46,21 @@ interface ProgressState {
   toggleSaved: (deckId: string, drinkId: string) => void;
   isSaved: (deckId: string, drinkId: string) => boolean;
 
+  /** Drinks manually flagged as "don't need to memorize" — excluded from quiz/review pools. */
+  skippedDrinks: Record<string, true>;
+  toggleSkipped: (deckId: string, drinkId: string) => void;
+  isSkipped: (deckId: string, drinkId: string) => boolean;
+
+  /** Free-text personal notes per drink, e.g. "keep confusing this for a tequila drink". */
+  personalNotes: Record<string, string>;
+  setPersonalNote: (deckId: string, drinkId: string, text: string) => void;
+  getPersonalNote: (deckId: string, drinkId: string) => string;
+
+  /** Fields the user has manually flagged themselves as shaky on for a given drink. */
+  shakyFields: Record<string, DrinkField[]>;
+  toggleShakyField: (deckId: string, drinkId: string, field: DrinkField) => void;
+  getShakyFields: (deckId: string, drinkId: string) => DrinkField[];
+
   getStats: (deckId: string, drinkId: string) => DrinkStats;
   recordResult: (deckId: string, drinkId: string, correct: boolean, field?: DrinkField) => void;
 
@@ -82,6 +97,67 @@ export const useProgressStore = create<ProgressState>()(
 
       isSaved: (deckId, drinkId) => {
         return !!get().savedDrinks[statKey(deckId, drinkId)];
+      },
+
+      skippedDrinks: {},
+
+      toggleSkipped: (deckId, drinkId) => {
+        set((s) => {
+          const key = statKey(deckId, drinkId);
+          const skippedDrinks = { ...s.skippedDrinks };
+          if (skippedDrinks[key]) {
+            delete skippedDrinks[key];
+          } else {
+            skippedDrinks[key] = true;
+          }
+          return { skippedDrinks };
+        });
+      },
+
+      isSkipped: (deckId, drinkId) => {
+        return !!get().skippedDrinks[statKey(deckId, drinkId)];
+      },
+
+      personalNotes: {},
+
+      setPersonalNote: (deckId, drinkId, text) => {
+        set((s) => {
+          const key = statKey(deckId, drinkId);
+          const personalNotes = { ...s.personalNotes };
+          if (text.trim() === "") {
+            delete personalNotes[key];
+          } else {
+            personalNotes[key] = text;
+          }
+          return { personalNotes };
+        });
+      },
+
+      getPersonalNote: (deckId, drinkId) => {
+        return get().personalNotes[statKey(deckId, drinkId)] ?? "";
+      },
+
+      shakyFields: {},
+
+      toggleShakyField: (deckId, drinkId, field) => {
+        set((s) => {
+          const key = statKey(deckId, drinkId);
+          const current = s.shakyFields[key] ?? [];
+          const next = current.includes(field)
+            ? current.filter((f) => f !== field)
+            : [...current, field];
+          const shakyFields = { ...s.shakyFields };
+          if (next.length === 0) {
+            delete shakyFields[key];
+          } else {
+            shakyFields[key] = next;
+          }
+          return { shakyFields };
+        });
+      },
+
+      getShakyFields: (deckId, drinkId) => {
+        return get().shakyFields[statKey(deckId, drinkId)] ?? [];
       },
 
       getStats: (deckId, drinkId) => {
