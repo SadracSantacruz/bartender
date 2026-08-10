@@ -14,6 +14,11 @@ const TIER_STYLES: Record<number, string> = {
 };
 const TIER_FALLBACK = "border-neutral-700 bg-neutral-800/60 text-neutral-300";
 
+// Stable empty-array reference. Returning a fresh `[]` from a zustand selector
+// makes every render look like a state change (Object.is compares by identity),
+// which spins React into an infinite re-render loop.
+const NO_SHAKY_FIELDS: DrinkField[] = [];
+
 const FIELD_LABELS: Record<DrinkField, string> = {
   base: "Base",
   glass: "Glass",
@@ -226,7 +231,7 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
   const skipped = useProgressStore((s) => !!s.skippedDrinks[key]);
   const setPersonalNote = useProgressStore((s) => s.setPersonalNote);
   const storedNote = useProgressStore((s) => s.personalNotes[key] ?? "");
-  const shakyFields = useProgressStore((s) => s.shakyFields[key] ?? []);
+  const shakyFields = useProgressStore((s) => s.shakyFields[key] ?? NO_SHAKY_FIELDS);
   const toggleShakyField = useProgressStore((s) => s.toggleShakyField);
   const color = baseColorFor(drink.base);
 
