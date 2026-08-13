@@ -32,6 +32,17 @@ You can also paste a deck's JSON into the in-app **Import** screen first to vali
 
 Progress uses a 5-box Leitner system per drink, weighted toward things you get wrong and haven't seen recently, and toward lower-tier (higher-priority) drinks by default.
 
+## Installing it on your phone
+
+The app is a PWA, so you can install it and use it with no signal:
+
+- **iPhone (Safari)** — Share → *Add to Home Screen*
+- **Android (Chrome)** — menu → *Install app* / *Add to Home screen*
+
+Once installed it opens fullscreen with its own icon, and everything — app, fonts, all decks — is cached, so it works behind the bar with no connection. When a new version deploys you'll get a small "new version ready" prompt; tap Reload to take it.
+
+Your selected decks and tier/category filters are remembered between sessions. The screen you were on is deliberately *not* remembered — reopening lands on Home rather than dropping you into a round whose state is gone.
+
 ## Backing up your progress (save files)
 
 There's no backend and no account — your progress lives in `localStorage`, which is **per browser**. Clearing site data, switching browsers, or moving to a new phone loses it.

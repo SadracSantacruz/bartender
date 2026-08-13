@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore, type Screen } from "../store/appStore";
-import { Card, Chip, SectionTitle } from "../components/ui";
+import { useProgressStore } from "../store/progressStore";
+import { getFilteredDrinks } from "../lib/quiz";
+import { buildReviewPool } from "../lib/reviewPool";
+import { accuracyText, Badge, Button, Card, Chip, ProgressBar, SectionTitle } from "../components/ui";
 
 const MODES: Array<{ screen: Screen; label: string; desc: string }> = [
   { screen: "browse", label: "Browse", desc: "Search every drink, not a quiz" },
@@ -59,6 +62,51 @@ export default function Home() {
 
   const hasSelection = selectedDeckIds.length > 0 && drinkCount > 0;
 
+  // Whole, stable store slices only — never a fresh literal out of a selector.
+  const stats = useProgressStore((s) => s.stats);
+  const savedDrinks = useProgressStore((s) => s.savedDrinks);
+  const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
+
+  const hasProgress = Object.keys(stats).length > 0;
+
+  /**
+   * "How am I doing / what should I drill now" for the current selection.
+   * Falls back to every loaded deck before the user has picked anything, so
+   * the block still says something useful on a cold open.
+   */
+  const snapshot = useMemo(() => {
+    const scoped = selectedDecks.length > 0;
+    const pool = scoped
+      ? getFilteredDrinks(selectedDecks, tierFilter, categoryFilter, skippedDrinks)
+      : getFilteredDrinks(
+          LOADED_DECKS.map((d) => d.deck),
+          "all",
+          "all",
+          skippedDrinks
+        );
+
+    const { getStats, isSaved, getMasteryPercent } = useProgressStore.getState();
+    const entries = buildReviewPool(pool, getStats, isSaved);
+
+    let neverSeen = 0;
+    let shaky = 0;
+    for (const { reasons } of entries) {
+      if (reasons.includes("never seen")) neverSeen++;
+      if (reasons.includes("shaky")) shaky++;
+    }
+
+    return {
+      scoped,
+      poolSize: pool.length,
+      mastery: getMasteryPercent(pool.map(({ deck, drink }) => ({ deckId: deck.id, drinkId: drink.id }))),
+      toReview: entries.length,
+      neverSeen,
+      shaky,
+    };
+    // `stats`/`savedDrinks` aren't read directly here, but they drive the
+    // getState() reads above, so they belong in the dependency list.
+  }, [selectedDecks, tierFilter, categoryFilter, skippedDrinks, stats, savedDrinks]);
+
   return (
     <div className="min-h-screen text-ink-100">
       <div className="mx-auto max-w-3xl px-4 py-8">
@@ -77,6 +125,95 @@ export default function Home() {
           </Card>
         ) : (
           <div className="space-y-8">
+            {!hasProgress ? (
+              <p className="rounded-2xl border border-ink-800 bg-ink-900/60 px-4 py-3 text-sm leading-relaxed text-ink-300">
+                Pick a deck below and start with{" "}
+                <span className="font-semibold text-brass-300">Review</span> or{" "}
+                <span className="font-semibold text-brass-300">Multiple Choice</span>.
+              </p>
+            ) : (
+              <Card glow accent="border-l-brass-500" className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-brass-500">
+                      {snapshot.scoped ? "Mastery · selected decks" : "Mastery · all decks"}
+                    </div>
+                    <div
+                      className={`font-display text-5xl font-bold leading-none tabular-nums ${accuracyText(snapshot.mastery)}`}
+                    >
+                      {snapshot.mastery}
+                      <span className="text-2xl font-semibold">%</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <Badge className="border-purple-700/70 bg-purple-950/50 text-purple-300">
+                      <span className="tabular-nums">{snapshot.neverSeen}</span> never drilled
+                    </Badge>
+                    <Badge className="border-amber-700/70 bg-amber-950/50 text-amber-300">
+                      <span className="tabular-nums">{snapshot.shaky}</span> shaky
+                    </Badge>
+                  </div>
+                </div>
+
+                <ProgressBar pct={snapshot.mastery} className="mt-3.5" />
+
+                {snapshot.toReview > 0 ? (
+                  <>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      disabled={!hasSelection}
+                      onClick={() => navigate("review")}
+                      className="mt-4 min-h-[52px] w-full text-base"
+                    >
+                      {hasSelection
+                        ? `Keep drilling — ${snapshot.toReview} to review`
+                        : "Pick a deck to keep drilling"}
+                    </Button>
+                    {hasSelection && (
+                      <p className="mt-2 text-center text-xs text-ink-500">
+                        Review targets exactly the unseen and shaky drinks.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-4 font-display text-base font-semibold text-emerald-400">
+                      Everything&rsquo;s reviewed
+                      {snapshot.poolSize > 0 && (
+                        <span className="ml-1.5 font-sans text-sm font-normal text-ink-400">
+                          all <span className="tabular-nums">{snapshot.poolSize}</span> drinks are solid
+                        </span>
+                      )}
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        disabled={!hasSelection}
+                        onClick={() => navigate("rapidfire")}
+                        className="min-h-[52px]"
+                      >
+                        Rapid Fire
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        disabled={!hasSelection}
+                        onClick={() => navigate("ticket")}
+                        className="min-h-[52px]"
+                      >
+                        Ticket Mode
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-center text-xs text-ink-500">
+                      Push for speed instead.
+                    </p>
+                  </>
+                )}
+              </Card>
+            )}
+
             <section>
               <SectionTitle
                 right={
