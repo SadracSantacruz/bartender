@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore } from "../store/appStore";
@@ -6,6 +6,7 @@ import { useProgressStore } from "../store/progressStore";
 import { getFilteredDrinks, type DeckDrink } from "../lib/quiz";
 import { baseColorFor, baseGroupFor } from "../lib/baseColors";
 import { DRINK_FIELDS, type DrinkField } from "../types";
+import { Badge, Button, Card, Chip, EmptyState } from "../components/ui";
 
 const TIER_STYLES: Record<number, string> = {
   1: "border-emerald-700 bg-emerald-950/60 text-emerald-300",
@@ -42,6 +43,26 @@ export default function Browse() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [skippedOnly, setSkippedOnly] = useState(false);
   const [hideSkipped, setHideSkipped] = useState(false);
+  // Collapsed by default: on a phone the filter panel is a full screen of chips,
+  // and the common case is scrolling/searching drinks, not filtering.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount =
+    (deckId !== "all" ? 1 : 0) +
+    (baseGroup !== "all" ? 1 : 0) +
+    (category !== "all" ? 1 : 0) +
+    (savedOnly ? 1 : 0) +
+    (skippedOnly ? 1 : 0) +
+    (hideSkipped ? 1 : 0);
+
+  function clearFilters() {
+    setDeckId("all");
+    setBaseGroup("all");
+    setCategory("all");
+    setSavedOnly(false);
+    setSkippedOnly(false);
+    setHideSkipped(false);
+  }
 
   const decks = useMemo(
     () => LOADED_DECKS.filter((d) => selectedDeckIds.includes(d.deck.id)).map((d) => d.deck),
@@ -101,10 +122,10 @@ export default function Browse() {
   if (pool.length === 0) {
     return (
       <Layout title="Browse">
-        <p className="text-neutral-400">
+        <EmptyState title="Nothing to browse yet">
           No drinks match your current selection. Go back Home and select a deck (and check your
           tier/category filters).
-        </p>
+        </EmptyState>
       </Layout>
     );
   }
@@ -114,111 +135,147 @@ export default function Browse() {
 
   return (
     <Layout title="Browse">
-      <input
-        type="text"
-        autoFocus
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search name, category, base, glass, garnish, ingredient..."
-        className="mb-3 min-h-[52px] w-full rounded-lg border border-neutral-800 bg-neutral-900/50 px-4 py-3 text-base text-neutral-100 placeholder-neutral-500 outline-none focus:border-emerald-600"
-      />
-
-      {decks.length > 1 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          <FilterChip active={deckId === "all"} onClick={() => setDeckId("all")} label="All decks" />
-          {decks.map((d) => (
-            <FilterChip
-              key={d.id}
-              active={deckId === d.id}
-              onClick={() => setDeckId(deckId === d.id ? "all" : d.id)}
-              label={d.name}
-              activeClass="border-fuchsia-600 bg-fuchsia-900/40 text-fuchsia-300"
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="mb-2 flex flex-wrap gap-2">
-        <FilterChip
-          active={baseGroup === "all"}
-          onClick={() => setBaseGroup("all")}
-          label="All bases"
-        />
-        {baseGroups.map((g) => (
-          <FilterChip
-            key={g}
-            active={baseGroup === g}
-            onClick={() => setBaseGroup(baseGroup === g ? "all" : g)}
-            label={g}
-            activeClass={baseColorFor(g).chipActive}
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <input
+            type="text"
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search name, category, base, glass, garnish, ingredient..."
+            className="min-h-[52px] w-full rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-base text-neutral-100 shadow-sm shadow-black/30 outline-none transition-colors duration-100 placeholder:text-neutral-500 focus:border-emerald-600"
           />
-        ))}
-      </div>
 
-      {categories.length > 1 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          <FilterChip
-            active={category === "all"}
-            onClick={() => setCategory("all")}
-            label="All categories"
-          />
-          {categories.map((c) => (
-            <FilterChip
-              key={c}
-              active={category === c}
-              onClick={() => setCategory(category === c ? "all" : c)}
-              label={c}
-            />
-          ))}
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              size="sm"
+              variant={activeFilterCount > 0 ? "primary" : "secondary"}
+              onClick={() => setFiltersOpen((v) => !v)}
+            >
+              {filtersOpen ? "Hide filters" : "Filters"}
+              {activeFilterCount > 0 && (
+                <span className="rounded-full bg-emerald-500/20 px-1.5 text-xs tabular-nums">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+            {activeFilterCount > 0 && (
+              <Button size="sm" variant="ghost" onClick={clearFilters}>
+                Clear
+              </Button>
+            )}
+          </div>
+
+          <Card className={`divide-y divide-neutral-800/80 ${filtersOpen ? "" : "hidden"}`}>
+            {decks.length > 1 && (
+              <FilterRow label="Deck">
+                <Chip active={deckId === "all"} onClick={() => setDeckId("all")} label="All decks" />
+                {decks.map((d) => (
+                  <Chip
+                    key={d.id}
+                    active={deckId === d.id}
+                    onClick={() => setDeckId(deckId === d.id ? "all" : d.id)}
+                    label={d.name}
+                    activeClass="border-fuchsia-600 bg-fuchsia-900/40 text-fuchsia-200"
+                  />
+                ))}
+              </FilterRow>
+            )}
+
+            <FilterRow label="Base">
+              <Chip active={baseGroup === "all"} onClick={() => setBaseGroup("all")} label="All bases" />
+              {baseGroups.map((g) => (
+                <Chip
+                  key={g}
+                  active={baseGroup === g}
+                  onClick={() => setBaseGroup(baseGroup === g ? "all" : g)}
+                  label={g}
+                  activeClass={baseColorFor(g).chipActive}
+                />
+              ))}
+            </FilterRow>
+
+            {categories.length > 1 && (
+              <FilterRow label="Category">
+                <Chip
+                  active={category === "all"}
+                  onClick={() => setCategory("all")}
+                  label="All categories"
+                />
+                {categories.map((c) => (
+                  <Chip
+                    key={c}
+                    active={category === c}
+                    onClick={() => setCategory(category === c ? "all" : c)}
+                    label={c}
+                  />
+                ))}
+              </FilterRow>
+            )}
+
+            <FilterRow label="Marks">
+              <Chip
+                active={savedOnly}
+                onClick={() => {
+                  setSavedOnly(!savedOnly);
+                  if (!savedOnly) setSkippedOnly(false);
+                }}
+                label="★ Saved only"
+                count={savedCount}
+                activeClass="border-sky-600 bg-sky-900/40 text-sky-200"
+              />
+              <Chip
+                active={skippedOnly}
+                onClick={() => {
+                  setSkippedOnly(!skippedOnly);
+                  if (!skippedOnly) setSavedOnly(false);
+                }}
+                label="🚫 Skipped only"
+                count={skippedCount}
+                activeClass="border-neutral-500 bg-neutral-800 text-neutral-100"
+              />
+              <Chip
+                active={hideSkipped}
+                onClick={() => setHideSkipped(!hideSkipped)}
+                label="Hide skipped"
+              />
+            </FilterRow>
+          </Card>
+
+          <p className="text-sm text-neutral-400">
+            <span className="font-medium tabular-nums text-neutral-200">{filtered.length}</span> drink
+            {filtered.length === 1 ? "" : "s"}
+          </p>
         </div>
-      )}
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        <FilterChip
-          active={savedOnly}
-          onClick={() => {
-            setSavedOnly(!savedOnly);
-            if (!savedOnly) setSkippedOnly(false);
-          }}
-          label={`★ Saved only (${savedCount})`}
-          activeClass="border-sky-600 bg-sky-900/40 text-sky-300"
-        />
-        <FilterChip
-          active={skippedOnly}
-          onClick={() => {
-            setSkippedOnly(!skippedOnly);
-            if (!skippedOnly) setSavedOnly(false);
-          }}
-          label={`🚫 Skipped only (${skippedCount})`}
-          activeClass="border-neutral-500 bg-neutral-800 text-neutral-200"
-        />
-        <FilterChip
-          active={hideSkipped}
-          onClick={() => setHideSkipped(!hideSkipped)}
-          label="Hide skipped"
-        />
+        {filtered.length === 0 ? (
+          <EmptyState title="No matches">
+            {savedOnly
+              ? "No saved drinks match. Tap the ☆ on a drink card to save it for later."
+              : skippedOnly
+                ? "No skipped drinks match. Tap 🚫 on a drink card to mark it as \"don't need to know.\""
+                : "Nothing matches those filters."}
+          </EmptyState>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {filtered.map(({ deck, drink }) => (
+              <DrinkCard key={`${deck.id}:${drink.id}`} deckDrink={{ deck, drink }} />
+            ))}
+          </div>
+        )}
       </div>
-
-      <p className="mb-3 text-sm text-neutral-500">
-        {filtered.length} drink{filtered.length === 1 ? "" : "s"}
-      </p>
-
-      {filtered.length === 0 ? (
-        <p className="text-neutral-400">
-          {savedOnly
-            ? "No saved drinks match. Tap the ☆ on a drink card to save it for later."
-            : skippedOnly
-              ? "No skipped drinks match. Tap 🚫 on a drink card to mark it as \"don't need to know.\""
-              : "Nothing matches those filters."}
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-3">
-          {filtered.map(({ deck, drink }) => (
-            <DrinkCard key={`${deck.id}:${drink.id}`} deckDrink={{ deck, drink }} />
-          ))}
-        </div>
-      )}
     </Layout>
+  );
+}
+
+function FilterRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+      <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+        {label}
+      </span>
+      {children}
+    </div>
   );
 }
 
@@ -245,75 +302,65 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
   }
 
   return (
-    <div
-      className={`rounded-lg border border-neutral-800 border-l-4 bg-neutral-900/50 p-4 ${color.border} ${
-        skipped ? "opacity-50" : ""
-      }`}
-    >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="text-lg font-semibold">{drink.name}</h3>
-        {drink.verify && (
-          <span className="rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs text-amber-400">
-            unverified
-          </span>
-        )}
-        {skipped && (
-          <span className="rounded border border-neutral-600 bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-300">
-            skipped
-          </span>
-        )}
-        <div className="ml-auto flex gap-2">
-          <button
-            type="button"
+    <Card accent={color.border} muted={skipped} className="p-4">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold leading-tight text-neutral-100">{drink.name}</h3>
+            {drink.verify && (
+              <Badge className="border-amber-800 bg-amber-950/50 text-amber-300">unverified</Badge>
+            )}
+            {skipped && (
+              <Badge className="border-neutral-600 bg-neutral-800 text-neutral-200">skipped</Badge>
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Badge className="border-fuchsia-700 bg-fuchsia-950/40 text-fuchsia-300">{deck.name}</Badge>
+            <Badge className={TIER_STYLES[drink.tier] ?? TIER_FALLBACK}>Tier {drink.tier}</Badge>
+            <Badge className="border-neutral-700 bg-neutral-800/60 text-neutral-300">
+              {drink.category}
+            </Badge>
+            <Badge className={color.badge}>{drink.base}</Badge>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() => toggleSaved(deck.id, drink.id)}
             title={saved ? "Remove from saved" : "Save as still learning"}
-            className={`rounded-lg border px-2.5 py-1 text-sm ${
-              saved
-                ? "border-sky-600 bg-sky-900/40 text-sky-300"
-                : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
-            }`}
+            className={saved ? "border-sky-600 bg-sky-900/40 text-sky-200 hover:bg-sky-900/60" : ""}
           >
             {saved ? "★ Saved" : "☆ Save"}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() => toggleSkipped(deck.id, drink.id)}
-            title={skipped ? "Include this in quizzes again" : "Don't need to know this — exclude from quizzes"}
-            className={`rounded-lg border px-2.5 py-1 text-sm ${
-              skipped
-                ? "border-neutral-500 bg-neutral-800 text-neutral-200"
-                : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
-            }`}
+            title={
+              skipped ? "Include this in quizzes again" : "Don't need to know this — exclude from quizzes"
+            }
+            className={skipped ? "border-neutral-500 bg-neutral-800 text-neutral-100" : ""}
           >
             {skipped ? "🚫 Skipped" : "🚫 Skip"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="mb-2 flex flex-wrap gap-1.5">
-        <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
-          {deck.name}
-        </span>
-        <span className={`rounded border px-1.5 py-0.5 text-xs ${TIER_STYLES[drink.tier] ?? TIER_FALLBACK}`}>
-          Tier {drink.tier}
-        </span>
-        <span className="rounded border border-neutral-700 bg-neutral-800/60 px-1.5 py-0.5 text-xs text-neutral-300">
-          {drink.category}
-        </span>
-        <span className={`rounded border px-1.5 py-0.5 text-xs ${color.badge}`}>{drink.base}</span>
-      </div>
-
-      <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         <Field label="Glass" value={drink.glass} />
         <Field label="Serve" value={drink.serve} />
         <Field label="Rim" value={drink.rim} />
         <Field label="Garnish" value={drink.garnish} />
         <Field label="Prep" value={drink.prep} />
-      </div>
+      </dl>
 
       {drink.ingredients.length > 0 && (
-        <div className="mt-2 text-sm">
-          <div className="mb-1 text-neutral-500">Ingredients</div>
+        <div className="mt-4 text-sm">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+            Ingredients
+          </div>
           <ul className="list-inside list-disc space-y-0.5 text-neutral-200">
             {drink.ingredients.map((ing, i) => (
               <li key={i}>{ing}</li>
@@ -323,21 +370,24 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
       )}
 
       {drink.notes && (
-        <p className="mt-2 text-sm text-neutral-400">
+        <p className="mt-3 text-sm leading-relaxed text-neutral-300">
           <span className="text-neutral-500">Notes: </span>
           {drink.notes}
         </p>
       )}
 
       {drink.verify && (
-        <p className="mt-2 rounded border border-amber-800 bg-amber-950/30 p-2 text-xs text-amber-400">
+        <p className="mt-3 rounded-lg border border-amber-800 bg-amber-950/30 p-2.5 text-xs leading-relaxed text-amber-300">
           {drink.verify}
         </p>
       )}
 
-      <div className="mt-3 border-t border-neutral-800 pt-3">
+      <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950/50 p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+          My notes
+        </div>
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs text-neutral-500">Shaky on:</span>
+          <span className="mr-1 text-xs text-neutral-400">Shaky on:</span>
           {DRINK_FIELDS.map((field) => {
             const active = shakyFields.includes(field);
             return (
@@ -345,10 +395,10 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
                 key={field}
                 type="button"
                 onClick={() => toggleShakyField(deck.id, drink.id, field)}
-                className={`rounded-full border px-2 py-0.5 text-xs ${
+                className={`min-h-[32px] rounded-full border px-2.5 py-1 text-xs transition-colors duration-100 ${
                   active
-                    ? "border-amber-600 bg-amber-900/40 text-amber-300"
-                    : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600"
+                    ? "border-amber-600 bg-amber-900/40 text-amber-200"
+                    : "border-neutral-700 bg-neutral-900/60 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
                 }`}
               >
                 {FIELD_LABELS[field]}
@@ -362,44 +412,18 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
           onBlur={commitNote}
           placeholder="Personal note — e.g. 'confused vodka for tequila', 'forgot the cherry garnish'..."
           rows={2}
-          className="w-full rounded-lg border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 outline-none focus:border-neutral-600"
+          className="w-full rounded-lg border border-neutral-800 bg-neutral-950/70 px-3 py-2 text-sm text-neutral-200 outline-none transition-colors duration-100 placeholder:text-neutral-500 focus:border-neutral-600"
         />
       </div>
-    </div>
-  );
-}
-
-function FilterChip({
-  active,
-  onClick,
-  label,
-  activeClass,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  activeClass?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-[36px] rounded-full border px-3 py-1 text-sm ${
-        active
-          ? (activeClass ?? "border-emerald-600 bg-emerald-900/40 text-emerald-300")
-          : "border-neutral-800 bg-neutral-900/50 text-neutral-400 hover:border-neutral-700"
-      }`}
-    >
-      {label}
-    </button>
+    </Card>
   );
 }
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <span className="text-neutral-500">{label}: </span>
-      <span className="text-neutral-200">{value}</span>
+    <div className="flex gap-1.5">
+      <dt className="shrink-0 text-neutral-500">{label}:</dt>
+      <dd className="min-w-0 text-neutral-200">{value}</dd>
     </div>
   );
 }

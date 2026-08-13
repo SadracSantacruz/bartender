@@ -16,6 +16,15 @@ import {
 } from "../lib/quiz";
 import { useAppStore } from "../store/appStore";
 import { useProgressStore } from "../store/progressStore";
+import {
+  accuracyText,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ProgressBar,
+  SectionTitle,
+} from "../components/ui";
 
 const ROUND_SIZE = 15;
 
@@ -40,32 +49,32 @@ function buildRound(pool: DeckDrink[]): DeckDrink[] {
   return pickRandom(pool, Math.min(ROUND_SIZE, pool.length));
 }
 
-function BuildCard({ drink }: { drink: Drink }) {
+function BuildCard({ drink, className = "" }: { drink: Drink; className?: string }) {
   const fields = DRINK_FIELDS.filter((f) => isFieldDocumented(drink, f));
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-      <div className="space-y-2">
+    <Card className={`p-5 ${className}`}>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {fields.map((field) => (
-          <div key={field} className="flex flex-col gap-0.5 border-b border-neutral-800/60 pb-2 last:border-none">
-            <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <div key={field} className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
               {FIELD_LABELS[field]}
             </span>
-            <span className="text-sm text-neutral-200">{getFieldValue(drink, field)}</span>
+            <span className="text-base leading-snug text-neutral-100">
+              {getFieldValue(drink, field)}
+            </span>
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function UnverifiedBadge({ drink }: { drink: Drink }) {
   if (!drink.verify) return null;
   return (
-    <div className="mt-2 space-y-1">
-      <span className="inline-block rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs text-amber-400">
-        unverified
-      </span>
-      <p className="text-xs text-amber-400">{drink.verify}</p>
+    <div className="mt-3 space-y-1">
+      <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+      <p className="text-xs leading-relaxed text-amber-400">{drink.verify}</p>
     </div>
   );
 }
@@ -116,13 +125,13 @@ export default function ReverseRecall() {
   if (pool.length === 0) {
     return (
       <Layout title="Reverse Recall">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 text-neutral-400">
+        <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back{" "}
           <button className="text-emerald-400 underline" onClick={() => navigate("home")}>
             Home
           </button>{" "}
           and pick a deck.
-        </div>
+        </EmptyState>
       </Layout>
     );
   }
@@ -172,43 +181,61 @@ export default function ReverseRecall() {
   }
 
   if (finished) {
+    const correctCount = round.length - missed.length;
+    const pct = round.length > 0 ? (correctCount / round.length) * 100 : 0;
     return (
       <Layout title="Reverse Recall">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Round complete</h2>
-          <p className="text-neutral-400">
-            {round.length - missed.length} / {round.length} correct.
-          </p>
+        <div className="space-y-6">
+          <Card accent="border-l-emerald-600" className="p-6 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Round complete
+            </p>
+            <div className={`mt-2 text-5xl font-bold tabular-nums ${accuracyText(pct)}`}>
+              {correctCount}
+              <span className="text-2xl font-semibold text-neutral-500">/{round.length}</span>
+            </div>
+            <p className="mt-1 text-sm text-neutral-400">correct</p>
+            <ProgressBar pct={pct} className="mt-4" />
+          </Card>
+
           {missed.length > 0 ? (
             <div>
-              <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">Missed</h3>
+              <SectionTitle
+                right={
+                  <span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>
+                }
+              >
+                Missed
+              </SectionTitle>
               <div className="space-y-3">
                 {missed.map((m, i) => (
-                  <div key={i} className="rounded-lg border border-red-900/60 bg-red-950/20 p-4">
-                    <BuildCard drink={m.deckDrink.drink} />
-                    <div className="mt-3 space-y-1 text-sm">
-                      <p className="text-neutral-400">
-                        Your guess: <span className="text-red-300">{m.guess || "(blank)"}</span>
-                      </p>
-                      <p className="text-neutral-400">
-                        Correct: <span className="text-emerald-300">{m.deckDrink.drink.name}</span>
-                      </p>
+                  <Card key={i} accent="border-l-red-700" className="p-4">
+                    <div className="text-lg font-semibold text-neutral-50">
+                      {m.deckDrink.drink.name}
                     </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                        {m.deckDrink.deck.name}
+                      </Badge>
+                    </div>
+                    <p className="mt-2 text-sm text-neutral-400">
+                      Your guess: <span className="text-red-300">{m.guess || "(blank)"}</span>
+                    </p>
+                    <BuildCard drink={m.deckDrink.drink} className="mt-3 bg-neutral-950/40" />
                     <UnverifiedBadge drink={m.deckDrink.drink} />
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-emerald-400">Perfect round. Nice work.</p>
+            <Card accent="border-l-emerald-600" className="p-4 text-emerald-300">
+              Perfect round. Nice work.
+            </Card>
           )}
-          <button
-            type="button"
-            onClick={playAgain}
-            className="rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-2 text-emerald-300 hover:bg-emerald-900/60"
-          >
+
+          <Button variant="primary" size="lg" className="w-full" onClick={playAgain}>
             Play again
-          </button>
+          </Button>
         </div>
       </Layout>
     );
@@ -219,8 +246,20 @@ export default function ReverseRecall() {
   return (
     <Layout title="Reverse Recall">
       <div className="space-y-4">
-        <p className="text-sm text-neutral-500">
-          Question {index + 1} of {round.length}
+        <div>
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Question {index + 1} of {round.length}
+            </span>
+            <span className="text-xs tabular-nums text-neutral-500">
+              {index - missed.length + (canAdvance ? 1 : 0)} correct
+            </span>
+          </div>
+          <ProgressBar pct={((index + (canAdvance ? 1 : 0)) / round.length) * 100} />
+        </div>
+
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+          Name this build
         </p>
 
         <BuildCard drink={drink} />
@@ -236,84 +275,110 @@ export default function ReverseRecall() {
             }}
             disabled={result !== null}
             placeholder="Name this drink..."
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 placeholder-neutral-600 outline-none focus:border-emerald-600 disabled:opacity-70"
+            className="min-h-[56px] w-full rounded-xl border-2 border-neutral-700 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 placeholder-neutral-600 outline-none transition-colors duration-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-70"
           />
         </div>
 
         {result === null && (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-4 py-2 text-neutral-200 hover:bg-neutral-900"
-          >
-            Submit
-          </button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={handleSubmit}>
+            Submit <span className="text-xs text-neutral-500">(Enter)</span>
+          </Button>
         )}
 
         {result === "exact" && (
-          <div className="rounded-lg border border-emerald-700 bg-emerald-950/40 p-4 text-emerald-300">
-            Correct — {drink.name} <span className="text-xs text-emerald-400/70">({deck.name})</span>
-            <UnverifiedBadge drink={drink} />
-          </div>
+          <Card accent="border-l-emerald-500" className="bg-emerald-950/40 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none text-emerald-400">&#10003;</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
+                  Correct
+                </p>
+                <p className="mt-0.5 text-xl font-semibold text-emerald-200">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                  {deck.name}
+                </Badge>
+                <UnverifiedBadge drink={drink} />
+              </div>
+            </div>
+          </Card>
         )}
 
         {result === "wrong" && (
-          <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
-            Not quite. Correct answer:{" "}
-            <span className="font-medium">
-              {drink.name} <span className="text-xs font-normal text-red-400/70">({deck.name})</span>
-            </span>
-            <UnverifiedBadge drink={drink} />
-          </div>
+          <Card accent="border-l-red-500" className="bg-red-950/40 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none text-red-400">&#10007;</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
+                  Not quite &mdash; correct answer
+                </p>
+                <p className="mt-0.5 text-xl font-semibold text-red-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                  {deck.name}
+                </Badge>
+                <UnverifiedBadge drink={drink} />
+              </div>
+            </div>
+          </Card>
         )}
 
         {result === "close-pending" && (
-          <div className="rounded-lg border border-amber-700 bg-amber-950/40 p-4 text-amber-300">
-            <p>Close — check spelling. Correct spelling: <span className="font-medium">{drink.name}</span></p>
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleSelfGrade(true)}
-                className="rounded-lg border border-emerald-700 bg-emerald-900/40 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-900/60"
-              >
+          <Card accent="border-l-amber-500" className="bg-amber-950/40 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500">
+              Close &mdash; check spelling
+            </p>
+            <p className="mt-0.5 text-xl font-semibold text-amber-100">{drink.name}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button variant="primary" size="lg" onClick={() => handleSelfGrade(true)}>
                 Count as correct
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelfGrade(false)}
-                className="rounded-lg border border-red-800 bg-red-950/40 px-3 py-1.5 text-sm text-red-300 hover:bg-red-950/60"
-              >
+              </Button>
+              <Button variant="danger" size="lg" onClick={() => handleSelfGrade(false)}>
                 Count as wrong
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
 
         {result === "close-correct" && (
-          <div className="rounded-lg border border-emerald-700 bg-emerald-950/40 p-4 text-emerald-300">
-            Marked correct — {drink.name} <span className="text-xs text-emerald-400/70">({deck.name})</span>
-            <UnverifiedBadge drink={drink} />
-          </div>
+          <Card accent="border-l-emerald-500" className="bg-emerald-950/40 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none text-emerald-400">&#10003;</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
+                  Marked correct
+                </p>
+                <p className="mt-0.5 text-xl font-semibold text-emerald-200">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                  {deck.name}
+                </Badge>
+                <UnverifiedBadge drink={drink} />
+              </div>
+            </div>
+          </Card>
         )}
 
         {result === "close-wrong" && (
-          <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
-            Marked wrong. Correct answer:{" "}
-            <span className="font-medium">
-              {drink.name} <span className="text-xs font-normal text-red-400/70">({deck.name})</span>
-            </span>
-            <UnverifiedBadge drink={drink} />
-          </div>
+          <Card accent="border-l-red-500" className="bg-red-950/40 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none text-red-400">&#10007;</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
+                  Marked wrong &mdash; correct answer
+                </p>
+                <p className="mt-0.5 text-xl font-semibold text-red-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                  {deck.name}
+                </Badge>
+                <UnverifiedBadge drink={drink} />
+              </div>
+            </div>
+          </Card>
         )}
 
         {canAdvance && (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-4 py-2 text-neutral-200 hover:bg-neutral-900"
-          >
-            Next (Space)
-          </button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={goNext}>
+            {index + 1 >= round.length ? "See results" : "Next"}
+            <span className="text-xs text-neutral-500">(Space)</span>
+          </Button>
         )}
       </div>
     </Layout>

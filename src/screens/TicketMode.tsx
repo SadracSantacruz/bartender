@@ -1,9 +1,10 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore } from "../store/appStore";
 import { useProgressStore } from "../store/progressStore";
 import { fuzzyMatchName, getFilteredDrinks, pickRandom, type DeckDrink } from "../lib/quiz";
+import { Badge, Button, Card, EmptyState, ProgressBar, SectionTitle } from "../components/ui";
 
 const MIN_TICKETS = 5;
 const MAX_TICKETS = 8;
@@ -159,10 +160,10 @@ export default function TicketMode() {
   if (pool.length === 0) {
     return (
       <Layout title="Ticket Mode">
-        <p className="text-neutral-400">
+        <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back home and select a deck (and check your
           tier/category filters).
-        </p>
+        </EmptyState>
       </Layout>
     );
   }
@@ -171,55 +172,74 @@ export default function TicketMode() {
     const glassCorrectCount = results.filter((r) => r.glassCorrect).length;
     const baseCorrectCount = results.filter((r) => r.baseCorrect).length;
     const missed = results.filter((r) => !r.glassCorrect || !r.baseCorrect);
+    const total = results.length * 2;
+    const pct = total > 0 ? ((glassCorrectCount + baseCorrectCount) / total) * 100 : 0;
 
     return (
       <Layout title="Ticket Mode">
         <div className="space-y-6">
-          <div className="rounded-lg border border-emerald-800 bg-emerald-950/30 p-6 text-center">
-            <div className="text-4xl font-bold tabular-nums text-emerald-400">
+          <Card accent="border-l-emerald-600" className="p-6 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Shift time
+            </p>
+            <div className="mt-2 text-6xl font-bold tabular-nums text-emerald-400">
               {formatElapsed(elapsedMs)}
             </div>
-            <p className="mt-1 text-neutral-400">
-              Glass: {glassCorrectCount}/{results.length} - Base: {baseCorrectCount}/{results.length}
-            </p>
-          </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
+                <div className="text-xs uppercase tracking-widest text-neutral-500">Glass</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums text-neutral-100">
+                  {glassCorrectCount}
+                  <span className="text-sm text-neutral-500">/{results.length}</span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
+                <div className="text-xs uppercase tracking-widest text-neutral-500">Base</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums text-neutral-100">
+                  {baseCorrectCount}
+                  <span className="text-sm text-neutral-500">/{results.length}</span>
+                </div>
+              </div>
+            </div>
+            <ProgressBar pct={pct} className="mt-4" />
+          </Card>
 
           {missed.length > 0 && (
             <div>
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
+              <SectionTitle
+                right={
+                  <span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>
+                }
+              >
                 Tickets with misses
-              </h2>
+              </SectionTitle>
               <div className="space-y-2">
                 {missed.map((r, i) => (
-                  <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
-                    <div className="font-medium text-neutral-200">{r.drink.drink.name}</div>
+                  <Card key={i} accent="border-l-red-700" className="p-3">
+                    <div className="font-medium text-neutral-50">{r.drink.drink.name}</div>
                     {!r.glassCorrect && (
                       <div className="mt-1 text-sm">
                         <span className="text-red-400">Glass: {r.glassGuess || "(blank)"}</span>
-                        <span className="text-neutral-500"> -- correct: </span>
+                        <span className="text-neutral-500"> &mdash; correct: </span>
                         <span className="text-emerald-400">{r.drink.drink.glass}</span>
                       </div>
                     )}
                     {!r.baseCorrect && (
                       <div className="mt-1 text-sm">
                         <span className="text-red-400">Base: {r.baseGuess || "(blank)"}</span>
-                        <span className="text-neutral-500"> -- correct: </span>
+                        <span className="text-neutral-500"> &mdash; correct: </span>
                         <span className="text-emerald-400">{r.drink.drink.base}</span>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={startRound}
-            className="min-h-[52px] w-full rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-3 font-medium text-emerald-300 hover:bg-emerald-900/60 active:bg-emerald-900"
-          >
+          <Button variant="primary" size="lg" className="w-full" onClick={startRound}>
             Play again
-          </button>
+          </Button>
         </div>
       </Layout>
     );
@@ -228,41 +248,55 @@ export default function TicketMode() {
   const current = tickets[index];
   const lastResult = revealed ? results[results.length - 1] : null;
 
+  function fieldClass(ok: boolean | undefined) {
+    if (!revealed) return "border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20";
+    return ok
+      ? "border-emerald-500 bg-emerald-950/30 text-emerald-100"
+      : "border-red-500 bg-red-950/30 text-red-100";
+  }
+
   return (
     <Layout title="Ticket Mode">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-neutral-500">
-            Ticket {index + 1} of {tickets.length}
+      <div className="space-y-5">
+        <div>
+          <div className="mb-1.5 flex items-end justify-between gap-3">
+            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Ticket {index + 1} of {tickets.length}
+            </span>
+            <span className="text-3xl font-bold leading-none tabular-nums text-neutral-50">
+              {formatElapsed(elapsedMs)}
+            </span>
           </div>
-          <div className="text-2xl font-bold tabular-nums text-neutral-100">
-            {formatElapsed(elapsedMs)}
-          </div>
+          <ProgressBar pct={((index + (revealed ? 1 : 0)) / tickets.length) * 100} />
         </div>
 
-        <div className="rounded-lg border-2 border-dashed border-neutral-700 bg-neutral-900/50 p-6 text-center">
-          <div className="mb-1 text-xs uppercase tracking-widest text-neutral-500">Ticket</div>
-          <div className="font-mono text-2xl font-semibold text-neutral-100">
+        <Card className="border-dashed bg-neutral-950/60 p-6 text-center">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+            Ticket
+          </div>
+          <div className="font-mono text-3xl font-bold leading-tight text-neutral-50">
             {current?.drink.name}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {current ? (
-              <span className="ml-2 align-middle rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs font-sans text-fuchsia-300">
+              <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
                 {current.deck.name}
-              </span>
+              </Badge>
             ) : null}
             {current?.drink.verify ? (
-              <span className="ml-2 align-middle rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs font-sans text-amber-400">
-                unverified
-              </span>
+              <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
             ) : null}
           </div>
           {current?.drink.verify && (
-            <p className="mt-2 text-xs text-amber-400">{current.drink.verify}</p>
+            <p className="mt-2 text-xs leading-relaxed text-amber-400">{current.drink.verify}</p>
           )}
-        </div>
+        </Card>
 
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-sm text-neutral-500">Glass</label>
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+              Glass
+            </label>
             <input
               ref={glassRef}
               type="text"
@@ -271,13 +305,9 @@ export default function TicketMode() {
               onKeyDown={handleGlassKeyDown}
               disabled={revealed}
               autoComplete="off"
-              className={`min-h-[48px] w-full rounded-lg border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-150 ${
-                revealed
-                  ? lastResult?.glassCorrect
-                    ? "border-emerald-500"
-                    : "border-red-500"
-                  : "border-neutral-700 focus:border-neutral-500"
-              }`}
+              className={`min-h-[52px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-100 ${fieldClass(
+                lastResult?.glassCorrect
+              )}`}
             />
             {revealed && !lastResult?.glassCorrect && (
               <p className="mt-1 text-sm text-emerald-400">Correct: {current?.drink.glass}</p>
@@ -285,7 +315,9 @@ export default function TicketMode() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-neutral-500">Base</label>
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+              Base
+            </label>
             <input
               ref={baseRef}
               type="text"
@@ -294,13 +326,9 @@ export default function TicketMode() {
               onKeyDown={handleBaseKeyDown}
               disabled={revealed}
               autoComplete="off"
-              className={`min-h-[48px] w-full rounded-lg border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-150 ${
-                revealed
-                  ? lastResult?.baseCorrect
-                    ? "border-emerald-500"
-                    : "border-red-500"
-                  : "border-neutral-700 focus:border-neutral-500"
-              }`}
+              className={`min-h-[52px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-100 ${fieldClass(
+                lastResult?.baseCorrect
+              )}`}
             />
             {revealed && !lastResult?.baseCorrect && (
               <p className="mt-1 text-sm text-emerald-400">Correct: {current?.drink.base}</p>
@@ -308,13 +336,15 @@ export default function TicketMode() {
           </div>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant={revealed ? "secondary" : "primary"}
+          size="lg"
+          className="w-full"
           onClick={revealed ? advance : submitTicket}
-          className="min-h-[52px] w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 font-medium text-neutral-200 hover:bg-neutral-800 active:bg-neutral-700"
         >
           {revealed ? (index + 1 >= tickets.length ? "Finish" : "Next ticket") : "Fire"}
-        </button>
+          <span className="text-xs opacity-60">(Enter)</span>
+        </Button>
       </div>
     </Layout>
   );

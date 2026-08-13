@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { DrinkField } from "../types";
+import type { SavePayload } from "../lib/saveFile";
 
 export interface DrinkKey {
   deckId: string;
@@ -73,6 +74,11 @@ interface ProgressState {
   getDeckMastery: (deckId: string, drinkIds: string[]) => number;
 
   resetProgress: () => void;
+
+  /** Everything that belongs in an exported save file. */
+  exportPayload: () => SavePayload;
+  /** Overwrite all progress with the contents of a save file. */
+  replaceProgress: (payload: SavePayload) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -251,7 +257,34 @@ export const useProgressStore = create<ProgressState>()(
         return breakdown;
       },
 
-      resetProgress: () => set({ stats: {} }),
+      resetProgress: () =>
+        set({
+          stats: {},
+          savedDrinks: {},
+          skippedDrinks: {},
+          personalNotes: {},
+          shakyFields: {},
+        }),
+
+      exportPayload: () => {
+        const s = get();
+        return {
+          stats: s.stats,
+          savedDrinks: s.savedDrinks,
+          skippedDrinks: s.skippedDrinks,
+          personalNotes: s.personalNotes,
+          shakyFields: s.shakyFields,
+        };
+      },
+
+      replaceProgress: (payload) =>
+        set({
+          stats: payload.stats,
+          savedDrinks: payload.savedDrinks,
+          skippedDrinks: payload.skippedDrinks,
+          personalNotes: payload.personalNotes,
+          shakyFields: payload.shakyFields,
+        }),
     }),
     { name: "bar-drill-progress" }
   )

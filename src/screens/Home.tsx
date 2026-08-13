@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore, type Screen } from "../store/appStore";
+import { Card, Chip, SectionTitle } from "../components/ui";
 
 const MODES: Array<{ screen: Screen; label: string; desc: string }> = [
   { screen: "browse", label: "Browse", desc: "Search every drink, not a quiz" },
@@ -59,124 +60,140 @@ export default function Home() {
   const hasSelection = selectedDeckIds.length > 0 && drinkCount > 0;
 
   return (
-    <div className="min-h-screen bg-neutral-950 px-4 py-6 text-neutral-100">
-      <h1 className="mb-1 text-2xl font-semibold">Bar Drill</h1>
-      <p className="mb-6 text-neutral-400">Pick your decks, then pick a mode.</p>
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-neutral-100">Bar Drill</h1>
+          <p className="mt-1 text-neutral-400">Pick your decks, then pick a mode.</p>
+        </header>
 
-      {LOADED_DECKS.length === 0 ? (
-        <div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4 text-amber-200">
-          No decks found in <code className="rounded bg-black/30 px-1">data/decks/</code>. Drop a{" "}
-          <code className="rounded bg-black/30 px-1">.json</code> deck file there and restart the dev server.
-        </div>
-      ) : (
-        <>
-          <section className="mb-6">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">Decks</h2>
-            <div className="space-y-2">
-              {LOADED_DECKS.map(({ deck }) => (
-                <label
-                  key={deck.id}
-                  className="flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/50 px-4 py-3 active:bg-neutral-900"
-                >
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 accent-emerald-500"
-                    checked={selectedDeckIds.includes(deck.id)}
-                    onChange={() => toggleDeck(deck.id)}
-                  />
-                  <div>
-                    <div className="font-medium">{deck.name}</div>
-                    <div className="text-sm text-neutral-500">
-                      {deck.description} · {deck.drinks.length} drinks
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </section>
-
-          {selectedDeckIds.length > 0 && (
-            <section className="mb-6 flex flex-wrap gap-4">
-              <div>
-                <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">Tier</h2>
-                <div className="flex flex-wrap gap-2">
-                  <FilterChip active={tierFilter === "all"} onClick={() => setTierFilter("all")} label="All" />
-                  {tiers.map((t) => (
-                    <FilterChip
-                      key={t}
-                      active={tierFilter === t}
-                      onClick={() => setTierFilter(t)}
-                      label={`Tier ${t}`}
-                    />
-                  ))}
-                </div>
+        {LOADED_DECKS.length === 0 ? (
+          <Card className="border-amber-800 bg-amber-950/30 p-5 text-amber-200">
+            No decks found in <code className="rounded bg-black/40 px-1">data/decks/</code>. Drop a{" "}
+            <code className="rounded bg-black/40 px-1">.json</code> deck file there and restart the dev
+            server.
+          </Card>
+        ) : (
+          <div className="space-y-8">
+            <section>
+              <SectionTitle
+                right={
+                  <span className="text-xs tabular-nums text-neutral-500">
+                    {selectedDeckIds.length} of {LOADED_DECKS.length} selected
+                  </span>
+                }
+              >
+                Decks
+              </SectionTitle>
+              <div className="space-y-2">
+                {LOADED_DECKS.map(({ deck }) => {
+                  const checked = selectedDeckIds.includes(deck.id);
+                  return (
+                    <label
+                      key={deck.id}
+                      className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-xl border bg-neutral-900/60 p-4 shadow-sm shadow-black/30 transition-colors duration-100 ${
+                        checked
+                          ? "border-emerald-700 bg-emerald-950/30"
+                          : "border-neutral-800 hover:border-neutral-700 active:bg-neutral-900"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 shrink-0 accent-emerald-500"
+                        checked={checked}
+                        onChange={() => toggleDeck(deck.id)}
+                      />
+                      <div className="min-w-0">
+                        <div
+                          className={`font-medium ${checked ? "text-emerald-100" : "text-neutral-100"}`}
+                        >
+                          {deck.name}
+                        </div>
+                        <div className="mt-0.5 text-sm text-neutral-400">
+                          {deck.description}{" "}
+                          <span className="tabular-nums text-neutral-500">
+                            · {deck.drinks.length} drinks
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
-              <div>
-                <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">Category</h2>
-                <div className="flex flex-wrap gap-2">
-                  <FilterChip
-                    active={categoryFilter === "all"}
-                    onClick={() => setCategoryFilter("all")}
-                    label="All"
-                  />
-                  {categories.map((c) => (
-                    <FilterChip
-                      key={c}
-                      active={categoryFilter === c}
-                      onClick={() => setCategoryFilter(c)}
-                      label={c}
-                    />
-                  ))}
-                </div>
-              </div>
-              <p className="w-full text-sm text-neutral-500">{drinkCount} drinks match your filters.</p>
             </section>
-          )}
 
-          <section>
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">Modes</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {MODES.map((mode) => {
-                const needsSelection = mode.screen !== "import" && mode.screen !== "dashboard";
-                const disabled = needsSelection && !hasSelection;
-                return (
-                  <button
-                    key={mode.screen}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => navigate(mode.screen)}
-                    className="min-h-[64px] rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 text-left transition-colors hover:border-emerald-700 hover:bg-neutral-900 active:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-800"
-                  >
-                    <div className="font-medium">{mode.label}</div>
-                    <div className="text-sm text-neutral-500">{mode.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-            {!hasSelection && (
-              <p className="mt-3 text-sm text-neutral-500">
-                Select at least one deck above to unlock the quiz modes.
-              </p>
+            {selectedDeckIds.length > 0 && (
+              <section className="space-y-4">
+                <div>
+                  <SectionTitle>Tier</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    <Chip active={tierFilter === "all"} onClick={() => setTierFilter("all")} label="All" />
+                    {tiers.map((t) => (
+                      <Chip
+                        key={t}
+                        active={tierFilter === t}
+                        onClick={() => setTierFilter(t)}
+                        label={`Tier ${t}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <SectionTitle>Category</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    <Chip
+                      active={categoryFilter === "all"}
+                      onClick={() => setCategoryFilter("all")}
+                      label="All"
+                    />
+                    {categories.map((c) => (
+                      <Chip
+                        key={c}
+                        active={categoryFilter === c}
+                        onClick={() => setCategoryFilter(c)}
+                        label={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-sm text-neutral-400">
+                  <span className="font-medium tabular-nums text-neutral-200">{drinkCount}</span> drinks
+                  match your filters.
+                </p>
+              </section>
             )}
-          </section>
-        </>
-      )}
-    </div>
-  );
-}
 
-function FilterChip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-[36px] rounded-full border px-3 py-1 text-sm ${
-        active
-          ? "border-emerald-600 bg-emerald-900/40 text-emerald-300"
-          : "border-neutral-800 bg-neutral-900/50 text-neutral-400 hover:border-neutral-700"
-      }`}
-    >
-      {label}
-    </button>
+            <section>
+              <SectionTitle>Modes</SectionTitle>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {MODES.map((mode) => {
+                  const needsSelection = mode.screen !== "import" && mode.screen !== "dashboard";
+                  const disabled = needsSelection && !hasSelection;
+                  return (
+                    <button
+                      key={mode.screen}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => navigate(mode.screen)}
+                      className="flex min-h-[76px] flex-col justify-center rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 text-left shadow-sm shadow-black/30 transition-colors duration-100 hover:border-emerald-700 hover:bg-neutral-900 active:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-800 disabled:hover:bg-neutral-900/60"
+                    >
+                      <div className="text-base font-semibold text-neutral-100">{mode.label}</div>
+                      <div className="mt-0.5 text-sm leading-snug text-neutral-400">{mode.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {!hasSelection && (
+                <p className="mt-3 text-sm text-neutral-400">
+                  Select at least one deck above to unlock the quiz modes.
+                </p>
+              )}
+            </section>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

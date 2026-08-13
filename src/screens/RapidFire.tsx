@@ -13,6 +13,7 @@ import {
   type InvertedQuestion,
 } from "../lib/quiz";
 import type { DrinkField } from "../types";
+import { Button, Card, EmptyState, ProgressBar, SectionTitle } from "../components/ui";
 
 const ROUND_SECONDS = 60;
 
@@ -205,68 +206,99 @@ export default function RapidFire() {
   if (pool.length === 0) {
     return (
       <Layout title="Rapid Fire">
-        <p className="text-neutral-400">
+        <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back home and select a deck (and check your
           tier/category filters).
-        </p>
+        </EmptyState>
       </Layout>
     );
   }
 
   if (roundState === "done") {
+    const attempted = score + misses.length;
+    const pct = attempted > 0 ? (score / attempted) * 100 : 0;
     return (
       <Layout title="Rapid Fire">
         <div className="space-y-6">
-          <div className="rounded-lg border border-emerald-800 bg-emerald-950/30 p-6 text-center">
-            <div className="text-4xl font-bold text-emerald-400">{score} correct</div>
-            <p className="mt-1 text-neutral-400">out of {score + misses.length} attempted</p>
-          </div>
+          <Card accent="border-l-emerald-600" className="p-6 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Time&rsquo;s up
+            </p>
+            <div className="mt-2 text-6xl font-bold tabular-nums text-emerald-400">{score}</div>
+            <p className="mt-1 text-sm text-neutral-400">
+              correct out of {attempted} attempted
+            </p>
+            <ProgressBar pct={pct} className="mt-4" />
+          </Card>
 
           {misses.length > 0 && (
             <div>
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
+              <SectionTitle
+                right={
+                  <span className="text-xs tabular-nums text-neutral-500">{misses.length}</span>
+                }
+              >
                 Missed questions
-              </h2>
+              </SectionTitle>
               <div className="space-y-2">
                 {misses.map((m, i) => (
-                  <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
-                    <div className="text-neutral-200">{m.prompt}</div>
+                  <Card key={i} accent="border-l-red-700" className="p-3">
+                    <div className="text-neutral-100">{m.prompt}</div>
                     <div className="mt-1 text-sm text-emerald-400">
                       Answer: {m.answerNames.join(" or ")}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={startRound}
-            className="min-h-[52px] w-full rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-3 font-medium text-emerald-300 hover:bg-emerald-900/60 active:bg-emerald-900"
-          >
+          <Button variant="primary" size="lg" className="w-full" onClick={startRound}>
             Play again
-          </button>
+          </Button>
         </div>
       </Layout>
     );
   }
 
+  const timerTone =
+    secondsLeft <= 10 ? "text-red-400" : secondsLeft <= 20 ? "text-amber-400" : "text-neutral-50";
+  const timerBar =
+    secondsLeft <= 10 ? "bg-red-500" : secondsLeft <= 20 ? "bg-amber-500" : "bg-emerald-500";
+
   return (
     <Layout title="Rapid Fire">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="text-3xl font-bold tabular-nums text-neutral-100">
-            0:{secondsLeft.toString().padStart(2, "0")}
+      <div className="space-y-5">
+        <div>
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                Time left
+              </div>
+              <div className={`text-5xl font-bold leading-none tabular-nums ${timerTone}`}>
+                0:{secondsLeft.toString().padStart(2, "0")}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                Score
+              </div>
+              <div className="text-5xl font-bold leading-none tabular-nums text-emerald-400">
+                {score}
+              </div>
+            </div>
           </div>
-          <div className="text-lg text-neutral-400">
-            Score: <span className="font-semibold text-emerald-400">{score}</span>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+            <div
+              className={`h-full rounded-full transition-[width] duration-100 ease-linear ${timerBar}`}
+              style={{ width: `${(secondsLeft / ROUND_SECONDS) * 100}%` }}
+            />
           </div>
         </div>
 
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-6 text-center">
-          <p className="text-xl font-medium text-neutral-100">{current?.prompt}</p>
-        </div>
+        <Card className="p-6 text-center">
+          <p className="text-2xl font-semibold leading-snug text-neutral-50">{current?.prompt}</p>
+        </Card>
 
         <input
           ref={inputRef}
@@ -276,12 +308,12 @@ export default function RapidFire() {
           onKeyDown={handleKeyDown}
           placeholder="Type the drink name and press Enter"
           autoComplete="off"
-          className={`min-h-[52px] w-full rounded-lg border-2 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 outline-none transition-colors duration-150 ${
+          className={`min-h-[56px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 placeholder-neutral-600 outline-none transition-colors duration-100 ${
             flash === "correct"
-              ? "border-emerald-500"
+              ? "border-emerald-500 bg-emerald-950/40 text-emerald-100"
               : flash === "wrong"
-                ? "border-red-500"
-                : "border-neutral-700 focus:border-neutral-500"
+                ? "border-red-500 bg-red-950/40 text-red-100"
+                : "border-neutral-700 focus:border-emerald-500"
           }`}
         />
       </div>

@@ -12,6 +12,15 @@ import {
   type DeckDrink,
 } from "../lib/quiz";
 import { DRINK_FIELDS, type DrinkField } from "../types";
+import {
+  accuracyText,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ProgressBar,
+  SectionTitle,
+} from "../components/ui";
 
 const ROUND_LENGTH = 15;
 const MAX_GEN_ATTEMPTS = 300;
@@ -227,10 +236,10 @@ export default function MultipleChoice() {
   if (pool.length === 0) {
     return (
       <Layout title="Multiple Choice">
-        <p className="text-neutral-400">
+        <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back Home and select a deck (and check your
           tier/category filters).
-        </p>
+        </EmptyState>
       </Layout>
     );
   }
@@ -238,91 +247,114 @@ export default function MultipleChoice() {
   if (questions.length === 0) {
     return (
       <Layout title="Multiple Choice">
-        <p className="text-neutral-400">
+        <EmptyState title="Not enough documented drinks">
           Not enough documented drinks in this pool to build a multiple-choice round. Try selecting
           more decks or clearing your filters.
-        </p>
+        </EmptyState>
       </Layout>
     );
   }
 
   if (finished) {
     const scoreCorrect = questions.length - missed.length;
+    const pct = questions.length > 0 ? (scoreCorrect / questions.length) * 100 : 0;
     return (
       <Layout title="Multiple Choice">
-        <div className="mb-6 rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-          <h2 className="mb-1 text-xl font-semibold">Round complete</h2>
-          <p className="text-neutral-400">
-            {scoreCorrect} / {questions.length} correct
+        <Card accent="border-l-emerald-600" className="mb-6 p-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+            Round complete
           </p>
-        </div>
+          <div className={`mt-2 text-5xl font-bold tabular-nums ${accuracyText(pct)}`}>
+            {scoreCorrect}
+            <span className="text-2xl font-semibold text-neutral-500">/{questions.length}</span>
+          </div>
+          <p className="mt-1 text-sm text-neutral-400">correct</p>
+          <ProgressBar pct={pct} className="mt-4" />
+        </Card>
 
         {missed.length > 0 ? (
           <div className="mb-6">
-            <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
+            <SectionTitle
+              right={<span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>}
+            >
               Missed questions
-            </h3>
+            </SectionTitle>
             <div className="space-y-2">
               {missed.map((m, i) => (
-                <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
-                  <div className="font-medium">
-                    {m.drinkName} — {fieldLabel(m.field)}
+                <Card key={i} accent="border-l-red-700" className="p-3">
+                  <div className="font-medium text-neutral-100">
+                    {m.drinkName}{" "}
+                    <span className="text-sm font-normal text-neutral-500">
+                      &middot; {fieldLabel(m.field)}
+                    </span>
                   </div>
-                  <div className="text-sm text-red-400">Your answer: {m.yourAnswer}</div>
+                  <div className="mt-1 text-sm text-red-400">Your answer: {m.yourAnswer}</div>
                   <div className="text-sm text-emerald-400">Correct: {m.correctAnswer}</div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
         ) : (
-          <p className="mb-6 text-emerald-400">Perfect round. Nice work.</p>
+          <Card accent="border-l-emerald-600" className="mb-6 p-4 text-emerald-300">
+            Perfect round. Nice work.
+          </Card>
         )}
 
-        <button
-          type="button"
-          onClick={startNewRound}
-          className="min-h-[52px] w-full rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-3 font-medium text-emerald-300 hover:bg-emerald-900/60 active:bg-emerald-900"
-        >
+        <Button variant="primary" size="lg" className="w-full" onClick={startNewRound}>
           Play again
-        </button>
+        </Button>
       </Layout>
     );
   }
 
+  const answered = index + (revealed ? 1 : 0);
+
   return (
     <Layout title="Multiple Choice">
-      <p className="mb-2 text-sm text-neutral-500">
-        Question {index + 1} of {questions.length}
-      </p>
-
-      <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold">{current.drinkName}</h2>
-          <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
-            {current.deckName}
+      <div className="mb-4">
+        <div className="mb-1.5 flex items-baseline justify-between gap-3">
+          <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+            Question {index + 1} of {questions.length}
           </span>
+          <span className="text-xs tabular-nums text-neutral-500">
+            {answered - missed.length} correct
+          </span>
+        </div>
+        <ProgressBar pct={(answered / questions.length) * 100} />
+      </div>
+
+      <Card className="mb-4 p-5">
+        <p className="text-xl font-semibold leading-snug text-neutral-50 sm:text-2xl">
+          {questionPrompt(current.drinkName, current.field)}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+            {current.deckName}
+          </Badge>
           {current.verify && (
-            <span className="rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs text-amber-400">
-              unverified
-            </span>
+            <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
           )}
         </div>
-        <p className="text-neutral-300">{questionPrompt(current.drinkName, current.field)}</p>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 gap-2">
         {current.options.map((opt, i) => {
           const isCorrect = opt === current.correctValue;
           const isPicked = selected === i;
           let cls =
-            "border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 active:bg-neutral-900";
+            "border-neutral-800 bg-neutral-900/60 text-neutral-100 hover:border-neutral-600 hover:bg-neutral-900 active:bg-neutral-800";
+          let numCls = "border-neutral-700 text-neutral-500";
           if (revealed) {
             if (isCorrect) {
-              cls = "border-emerald-600 bg-emerald-900/40 text-emerald-200";
+              cls =
+                "border-emerald-500 bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/40";
+              numCls = "border-emerald-500 text-emerald-300";
             } else if (isPicked) {
-              cls = "border-red-700 bg-red-950/40 text-red-200";
+              cls = "border-red-600 bg-red-950/50 text-red-100 ring-1 ring-red-500/30";
+              numCls = "border-red-600 text-red-300";
             } else {
-              cls = "border-neutral-800 bg-neutral-900/30 opacity-60";
+              cls = "border-neutral-800 bg-neutral-900/30 text-neutral-500 opacity-60";
+              numCls = "border-neutral-800 text-neutral-600";
             }
           }
           return (
@@ -331,29 +363,39 @@ export default function MultipleChoice() {
               type="button"
               disabled={revealed}
               onClick={() => submitAnswer(i)}
-              className={`min-h-[52px] rounded-lg border px-4 py-3 text-left transition-colors duration-100 ${cls}`}
+              className={`flex min-h-[56px] w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-base transition-colors duration-100 disabled:cursor-default ${cls}`}
             >
-              <span className="mr-2 text-neutral-500">{i + 1}.</span>
-              {opt}
+              <span
+                className={`flex h-6 w-6 flex-none items-center justify-center rounded-md border text-xs font-semibold tabular-nums ${numCls}`}
+              >
+                {i + 1}
+              </span>
+              <span className="flex-1">{opt}</span>
+              {revealed && isCorrect && (
+                <span className="flex-none text-lg leading-none text-emerald-400">&#10003;</span>
+              )}
+              {revealed && isPicked && !isCorrect && (
+                <span className="flex-none text-lg leading-none text-red-400">&#10007;</span>
+              )}
             </button>
           );
         })}
       </div>
 
       {revealed && current.verify && (
-        <p className="mt-3 rounded border border-amber-800 bg-amber-950/30 p-2 text-xs text-amber-400">
-          {current.verify}
-        </p>
+        <Card accent="border-l-amber-600" className="mt-3 p-3">
+          <div className="mb-1">
+            <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+          </div>
+          <p className="text-xs leading-relaxed text-amber-400">{current.verify}</p>
+        </Card>
       )}
 
       {revealed && (
-        <button
-          type="button"
-          onClick={advance}
-          className="mt-4 min-h-[52px] w-full rounded-lg border border-neutral-700 bg-neutral-900/50 px-4 py-3 font-medium text-neutral-200 hover:bg-neutral-900 active:bg-neutral-800"
-        >
-          {index + 1 >= questions.length ? "See results" : "Next"} (Enter / Space)
-        </button>
+        <Button variant="secondary" size="lg" className="mt-4 w-full" onClick={advance}>
+          {index + 1 >= questions.length ? "See results" : "Next"}
+          <span className="text-xs text-neutral-500">(Enter / Space)</span>
+        </Button>
       )}
     </Layout>
   );

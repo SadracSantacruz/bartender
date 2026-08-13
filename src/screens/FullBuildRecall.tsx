@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import type { DrinkField } from "../types";
@@ -11,6 +11,15 @@ import {
 } from "../lib/quiz";
 import { useAppStore } from "../store/appStore";
 import { useProgressStore } from "../store/progressStore";
+import {
+  accuracyText,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ProgressBar,
+  SectionTitle,
+} from "../components/ui";
 
 const ROUND_SIZE = 10;
 
@@ -35,6 +44,9 @@ interface SummaryEntry {
   deckDrink: DeckDrink;
   wrongFields: DrinkField[];
 }
+
+const INPUT_CLASS =
+  "min-h-[48px] w-full rounded-lg border-2 border-neutral-700 bg-neutral-900 px-3 py-2 text-base text-neutral-100 placeholder-neutral-600 outline-none transition-colors duration-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-70";
 
 export default function FullBuildRecall() {
   const selectedDeckIds = useAppStore((s) => s.selectedDeckIds);
@@ -89,13 +101,13 @@ export default function FullBuildRecall() {
   if (pool.length === 0) {
     return (
       <Layout title="Full Build Recall">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 text-neutral-400">
+        <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back{" "}
           <button className="text-emerald-400 underline" onClick={() => navigate("home")}>
             Home
           </button>{" "}
           and pick a deck.
-        </div>
+        </EmptyState>
       </Layout>
     );
   }
@@ -135,38 +147,55 @@ export default function FullBuildRecall() {
   }
 
   if (finished) {
+    const cleanCount = summary.filter((e) => e.wrongFields.length === 0).length;
+    const pct = summary.length > 0 ? (cleanCount / summary.length) * 100 : 0;
     return (
       <Layout title="Full Build Recall">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Round complete</h2>
-          <div className="space-y-3">
-            {summary.map((entry, i) => (
-              <div
-                key={i}
-                className={`rounded-lg border p-4 ${
-                  entry.wrongFields.length === 0
-                    ? "border-emerald-800 bg-emerald-950/20"
-                    : "border-red-900/60 bg-red-950/20"
-                }`}
-              >
-                <div className="font-medium text-neutral-100">{entry.deckDrink.drink.name}</div>
-                {entry.wrongFields.length === 0 ? (
-                  <p className="mt-1 text-sm text-emerald-400">All marked fields correct.</p>
-                ) : (
-                  <p className="mt-1 text-sm text-red-300">
-                    Missed: {entry.wrongFields.map((f) => FIELD_LABELS[f]).join(", ")}
-                  </p>
-                )}
-              </div>
-            ))}
+        <div className="space-y-6">
+          <Card accent="border-l-emerald-600" className="p-6 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Round complete
+            </p>
+            <div className={`mt-2 text-5xl font-bold tabular-nums ${accuracyText(pct)}`}>
+              {cleanCount}
+              <span className="text-2xl font-semibold text-neutral-500">/{summary.length}</span>
+            </div>
+            <p className="mt-1 text-sm text-neutral-400">clean builds</p>
+            <ProgressBar pct={pct} className="mt-4" />
+          </Card>
+
+          <div>
+            <SectionTitle>Every drink this round</SectionTitle>
+            <div className="space-y-2">
+              {summary.map((entry, i) => (
+                <Card
+                  key={i}
+                  accent={
+                    entry.wrongFields.length === 0 ? "border-l-emerald-600" : "border-l-red-700"
+                  }
+                  className="p-4"
+                >
+                  <div className="font-medium text-neutral-50">{entry.deckDrink.drink.name}</div>
+                  {entry.wrongFields.length === 0 ? (
+                    <p className="mt-1 text-sm text-emerald-400">All marked fields correct.</p>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-neutral-500">Missed:</span>
+                      {entry.wrongFields.map((f) => (
+                        <Badge key={f} className="border-red-800 bg-red-950/50 text-red-300">
+                          {FIELD_LABELS[f]}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={playAgain}
-            className="rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-2 text-emerald-300 hover:bg-emerald-900/60"
-          >
+
+          <Button variant="primary" size="lg" className="w-full" onClick={playAgain}>
             Play again
-          </button>
+          </Button>
         </div>
       </Layout>
     );
@@ -177,114 +206,132 @@ export default function FullBuildRecall() {
   return (
     <Layout title="Full Build Recall">
       <div className="space-y-4">
-        <p className="text-sm text-neutral-500">
-          Drink {index + 1} of {round.length}
-        </p>
+        <div>
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Drink {index + 1} of {round.length}
+            </span>
+            {revealed && (
+              <span className="text-xs tabular-nums text-neutral-500">
+                {documentedFields.filter((f) => grades[f] !== undefined).length}/
+                {documentedFields.length} marked
+              </span>
+            )}
+          </div>
+          <ProgressBar pct={(index / round.length) * 100} />
+        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-2xl font-semibold">{drink.name}</h2>
-          <span className="rounded border border-fuchsia-700 bg-fuchsia-950/40 px-1.5 py-0.5 text-xs text-fuchsia-300">
-            {deck.name}
-          </span>
+        <div>
+          <h2 className="text-3xl font-bold leading-tight text-neutral-50">{drink.name}</h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+              {deck.name}
+            </Badge>
+            {drink.verify && (
+              <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">
-          {documentedFields.map((field, i) => (
-            <div key={field} className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">
-                {FIELD_LABELS[field]}
-              </div>
-              {field === "ingredients" ? (
-                <textarea
-                  value={answers[field] ?? ""}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [field]: e.target.value }))}
-                  disabled={revealed}
-                  rows={3}
-                  placeholder="List ingredients..."
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder-neutral-600 outline-none focus:border-emerald-600 disabled:opacity-70"
-                />
-              ) : (
-                <input
-                  ref={i === 0 ? firstInputRef : undefined}
-                  type="text"
-                  value={answers[field] ?? ""}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [field]: e.target.value }))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !revealed) handleReveal();
-                  }}
-                  disabled={revealed}
-                  placeholder={`Your answer for ${FIELD_LABELS[field].toLowerCase()}...`}
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder-neutral-600 outline-none focus:border-emerald-600 disabled:opacity-70"
-                />
-              )}
-
-              {revealed && (
-                <div className="mt-3 space-y-2 border-t border-neutral-800 pt-3">
-                  <div className="text-sm">
-                    <span className="text-neutral-500">Correct: </span>
-                    <span className="text-emerald-300">{getFieldValue(drink, field)}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={grades[field] !== undefined}
-                      onClick={() => handleGrade(field, true)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm ${
-                        grades[field] === true
-                          ? "border-emerald-600 bg-emerald-900/60 text-emerald-300"
-                          : "border-neutral-700 bg-neutral-900/50 text-neutral-300 hover:bg-neutral-900"
-                      } disabled:cursor-not-allowed`}
-                    >
-                      Got it
-                    </button>
-                    <button
-                      type="button"
-                      disabled={grades[field] !== undefined}
-                      onClick={() => handleGrade(field, false)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm ${
-                        grades[field] === false
-                          ? "border-red-700 bg-red-950/60 text-red-300"
-                          : "border-neutral-700 bg-neutral-900/50 text-neutral-300 hover:bg-neutral-900"
-                      } disabled:cursor-not-allowed`}
-                    >
-                      Missed it
-                    </button>
-                  </div>
+          {documentedFields.map((field, i) => {
+            const graded = grades[field];
+            const accent =
+              graded === true
+                ? "border-l-emerald-600"
+                : graded === false
+                  ? "border-l-red-700"
+                  : undefined;
+            return (
+              <Card key={field} accent={accent} className="p-4">
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                  {FIELD_LABELS[field]}
                 </div>
-              )}
-            </div>
-          ))}
+                {field === "ingredients" ? (
+                  <textarea
+                    value={answers[field] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [field]: e.target.value }))}
+                    disabled={revealed}
+                    rows={3}
+                    placeholder="List ingredients..."
+                    className={INPUT_CLASS}
+                  />
+                ) : (
+                  <input
+                    ref={i === 0 ? firstInputRef : undefined}
+                    type="text"
+                    value={answers[field] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [field]: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !revealed) handleReveal();
+                    }}
+                    disabled={revealed}
+                    placeholder={`Your answer for ${FIELD_LABELS[field].toLowerCase()}...`}
+                    className={INPUT_CLASS}
+                  />
+                )}
+
+                {revealed && (
+                  <div className="mt-3 space-y-3 border-t border-neutral-800 pt-3">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                        Correct
+                      </div>
+                      <div className="mt-0.5 text-base leading-snug text-emerald-300">
+                        {getFieldValue(drink, field)}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={graded === true ? "primary" : "secondary"}
+                        size="md"
+                        disabled={graded !== undefined}
+                        onClick={() => handleGrade(field, true)}
+                        className={graded === true ? "disabled:opacity-100! ring-2 ring-emerald-500/40" : ""}
+                      >
+                        &#10003; Got it
+                      </Button>
+                      <Button
+                        variant={graded === false ? "danger" : "secondary"}
+                        size="md"
+                        disabled={graded !== undefined}
+                        onClick={() => handleGrade(field, false)}
+                        className={graded === false ? "disabled:opacity-100! ring-2 ring-red-500/40" : ""}
+                      >
+                        &#10007; Missed it
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
 
         {revealed && drink.verify && (
-          <div className="space-y-1">
-            <span className="inline-block rounded border border-amber-800 bg-amber-950/50 px-1.5 py-0.5 text-xs text-amber-400">
-              unverified
-            </span>
-            <p className="text-xs text-amber-400">{drink.verify}</p>
-          </div>
+          <Card accent="border-l-amber-600" className="p-3">
+            <div className="mb-1">
+              <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+            </div>
+            <p className="text-xs leading-relaxed text-amber-400">{drink.verify}</p>
+          </Card>
         )}
 
         {!revealed ? (
-          <button
-            type="button"
-            onClick={handleReveal}
-            className="rounded-lg border border-neutral-700 bg-neutral-900/50 px-4 py-2 text-neutral-200 hover:bg-neutral-900"
-          >
-            Reveal
-          </button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={handleReveal}>
+            Reveal <span className="text-xs text-neutral-500">(Enter)</span>
+          </Button>
         ) : (
           <div className="space-y-2">
             {!allMarked && (
-              <p className="text-sm text-neutral-500">Mark all fields above before moving on (or skip early).</p>
+              <p className="text-sm text-neutral-500">
+                Mark all fields above before moving on (or skip early).
+              </p>
             )}
-            <button
-              type="button"
-              onClick={goNext}
-              className="rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-2 text-emerald-300 hover:bg-emerald-900/60"
-            >
-              Next drink (Space)
-            </button>
+            <Button variant="primary" size="lg" className="w-full" onClick={goNext}>
+              {index + 1 >= round.length ? "See results" : "Next drink"}
+              <span className="text-xs text-emerald-500/70">(Space)</span>
+            </Button>
           </div>
         )}
       </div>
