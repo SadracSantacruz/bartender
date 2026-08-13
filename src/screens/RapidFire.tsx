@@ -220,31 +220,29 @@ export default function RapidFire() {
     return (
       <Layout title="Rapid Fire">
         <div className="space-y-6">
-          <Card accent="border-l-emerald-600" className="p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+          <Card accent="border-l-emerald-500" glow className="p-7 text-center">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Time&rsquo;s up
             </p>
-            <div className="mt-2 text-6xl font-bold tabular-nums text-emerald-400">{score}</div>
-            <p className="mt-1 text-sm text-neutral-400">
-              correct out of {attempted} attempted
-            </p>
-            <ProgressBar pct={pct} className="mt-4" />
+            <div className="mt-2 font-display text-7xl font-bold leading-none tabular-nums text-emerald-400">
+              {score}
+            </div>
+            <p className="mt-2 text-sm text-ink-400">correct out of {attempted} attempted</p>
+            <ProgressBar pct={pct} className="mt-5" />
           </Card>
 
           {misses.length > 0 && (
             <div>
               <SectionTitle
-                right={
-                  <span className="text-xs tabular-nums text-neutral-500">{misses.length}</span>
-                }
+                right={<span className="text-xs tabular-nums text-ink-400">{misses.length}</span>}
               >
                 Missed questions
               </SectionTitle>
               <div className="space-y-2">
                 {misses.map((m, i) => (
-                  <Card key={i} accent="border-l-red-700" className="p-3">
-                    <div className="text-neutral-100">{m.prompt}</div>
-                    <div className="mt-1 text-sm text-emerald-400">
+                  <Card key={i} accent="border-l-rose-600" className="p-4">
+                    <div className="font-display text-base leading-snug text-ink-100">{m.prompt}</div>
+                    <div className="mt-1.5 text-sm font-medium text-emerald-400">
                       Answer: {m.answerNames.join(" or ")}
                     </div>
                   </Card>
@@ -262,9 +260,9 @@ export default function RapidFire() {
   }
 
   const timerTone =
-    secondsLeft <= 10 ? "text-red-400" : secondsLeft <= 20 ? "text-amber-400" : "text-neutral-50";
+    secondsLeft <= 10 ? "text-rose-400" : secondsLeft <= 20 ? "text-amber-400" : "text-ink-100";
   const timerBar =
-    secondsLeft <= 10 ? "bg-red-500" : secondsLeft <= 20 ? "bg-amber-500" : "bg-emerald-500";
+    secondsLeft <= 10 ? "bg-rose-500" : secondsLeft <= 20 ? "bg-amber-500" : "bg-brass-500";
 
   return (
     <Layout title="Rapid Fire">
@@ -272,23 +270,23 @@ export default function RapidFire() {
         <div>
           <div className="mb-2 flex items-end justify-between gap-3">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+              <div className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                 Time left
               </div>
-              <div className={`text-5xl font-bold leading-none tabular-nums ${timerTone}`}>
+              <div className={`font-display text-6xl font-bold leading-none tabular-nums ${timerTone}`}>
                 0:{secondsLeft.toString().padStart(2, "0")}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+              <div className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                 Score
               </div>
-              <div className="text-5xl font-bold leading-none tabular-nums text-emerald-400">
+              <div className="font-display text-6xl font-bold leading-none tabular-nums text-emerald-400">
                 {score}
               </div>
             </div>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
             <div
               className={`h-full rounded-full transition-[width] duration-100 ease-linear ${timerBar}`}
               style={{ width: `${(secondsLeft / ROUND_SECONDS) * 100}%` }}
@@ -296,8 +294,10 @@ export default function RapidFire() {
           </div>
         </div>
 
-        <Card className="p-6 text-center">
-          <p className="text-2xl font-semibold leading-snug text-neutral-50">{current?.prompt}</p>
+        <Card glow className="px-6 py-9 text-center">
+          <p className="font-display text-3xl font-semibold leading-snug text-ink-100">
+            {current?.prompt}
+          </p>
         </Card>
 
         <input
@@ -308,12 +308,12 @@ export default function RapidFire() {
           onKeyDown={handleKeyDown}
           placeholder="Type the drink name and press Enter"
           autoComplete="off"
-          className={`min-h-[56px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 placeholder-neutral-600 outline-none transition-colors duration-100 ${
+          className={`min-h-[56px] w-full rounded-xl border-2 bg-ink-900 px-4 py-3 text-lg text-ink-100 placeholder-ink-500 outline-none transition-colors duration-100 ${
             flash === "correct"
               ? "border-emerald-500 bg-emerald-950/40 text-emerald-100"
               : flash === "wrong"
-                ? "border-red-500 bg-red-950/40 text-red-100"
-                : "border-neutral-700 focus:border-emerald-500"
+                ? "border-rose-500 bg-rose-950/40 text-rose-100"
+                : "border-ink-700 focus:border-brass-500 focus:ring-2 focus:ring-brass-500/25"
           }`}
         />
       </div>

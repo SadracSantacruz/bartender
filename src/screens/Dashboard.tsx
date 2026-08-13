@@ -128,7 +128,7 @@ export default function Dashboard() {
     <Layout title="Dashboard">
       <div className="space-y-8">
         {flash && (
-          <div className="rounded-xl border border-emerald-800 bg-emerald-950/40 p-3 text-sm text-emerald-200">
+          <div className="rounded-2xl border border-emerald-700/70 bg-emerald-950/40 p-3.5 text-sm text-emerald-200">
             {flash}
           </div>
         )}
@@ -141,16 +141,20 @@ export default function Dashboard() {
           <>
             <section>
               <SectionTitle>Overall Mastery</SectionTitle>
-              <Card className="p-6">
+              <Card glow className="p-6">
                 <div className="flex items-end justify-between gap-4">
-                  <div className={`text-5xl font-semibold tabular-nums ${accuracyText(overallMastery)}`}>
+                  <div
+                    className={`font-display text-7xl font-bold leading-none tabular-nums ${accuracyText(
+                      overallMastery
+                    )}`}
+                  >
                     {overallMastery}%
                   </div>
-                  <div className="text-right text-sm text-neutral-500">
-                    {Object.keys(stats).length} drinks drilled
+                  <div className="text-right text-sm text-ink-400">
+                    <span className="tabular-nums">{Object.keys(stats).length}</span> drinks drilled
                   </div>
                 </div>
-                <ProgressBar pct={overallMastery} className="mt-4" />
+                <ProgressBar pct={overallMastery} className="mt-5 h-3" />
               </Card>
             </section>
 
@@ -162,8 +166,10 @@ export default function Dashboard() {
                   return (
                     <Card key={deck.id} className="p-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="font-medium">{deck.name}</span>
-                        <span className={`text-sm font-semibold tabular-nums ${accuracyText(pct)}`}>
+                        <span className="font-display font-semibold text-ink-100">{deck.name}</span>
+                        <span
+                          className={`font-display text-lg font-bold tabular-nums ${accuracyText(pct)}`}
+                        >
                           {pct}%
                         </span>
                       </div>
@@ -187,19 +193,23 @@ export default function Dashboard() {
                       className="flex items-center justify-between gap-3 px-4 py-3"
                     >
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{info?.drinkName ?? entry.drinkId}</div>
-                        <div className="truncate text-sm text-neutral-500">
+                        <div className="truncate font-display font-semibold text-ink-100">
+                          {info?.drinkName ?? entry.drinkId}
+                        </div>
+                        <div className="truncate text-sm text-ink-400">
                           {info?.deckName ?? entry.deckId}
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
-                        <Badge className="border-neutral-700 bg-neutral-800/60 text-neutral-400">
+                        <Badge className="border-ink-700 bg-ink-850 text-ink-300">
                           Box {entry.stats.leitnerBox}
                         </Badge>
                         {notYetDrilled ? (
-                          <span className="text-sm text-neutral-500">not yet drilled</span>
+                          <span className="text-sm text-ink-400">not yet drilled</span>
                         ) : (
-                          <span className={`text-sm font-semibold tabular-nums ${accuracyText(pct!)}`}>
+                          <span
+                            className={`font-display text-base font-bold tabular-nums ${accuracyText(pct!)}`}
+                          >
                             {pct}%
                           </span>
                         )}
@@ -217,10 +227,16 @@ export default function Dashboard() {
                   {fieldEntries.map((entry) => (
                     <Card key={entry.field} className="p-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="font-medium">{FIELD_LABELS[entry.field]}</span>
-                        <span className={`text-sm font-semibold tabular-nums ${accuracyText(entry.pct)}`}>
+                        <span className="font-display font-semibold text-ink-100">
+                          {FIELD_LABELS[entry.field]}
+                        </span>
+                        <span
+                          className={`font-display text-lg font-bold tabular-nums ${accuracyText(
+                            entry.pct
+                          )}`}
+                        >
                           {entry.pct}%{" "}
-                          <span className="font-normal text-neutral-500">
+                          <span className="text-sm font-normal text-ink-400">
                             ({entry.correct}/{entry.seen})
                           </span>
                         </span>
@@ -236,8 +252,8 @@ export default function Dashboard() {
 
         <section>
           <SectionTitle>Save File</SectionTitle>
-          <Card className="space-y-4 p-4">
-            <p className="text-sm text-neutral-400">
+          <Card accent="border-l-brass-500" className="space-y-4 p-5">
+            <p className="text-sm leading-relaxed text-ink-300">
               Your progress lives in this browser only. Export a save file to back it up or move it to
               another phone or computer — then import it there to pick up where you left off.
             </p>
@@ -263,20 +279,22 @@ export default function Dashboard() {
             </div>
 
             {importError && (
-              <div className="rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
+              <div className="rounded-xl border border-rose-700/70 bg-rose-950/40 p-3 text-sm text-rose-200">
                 {importError}
               </div>
             )}
 
             {pending && (
-              <div className="rounded-lg border border-amber-700 bg-amber-950/30 p-4">
-                <div className="mb-1 font-medium text-amber-200">{pending.filename}</div>
+              <div className="rounded-2xl border border-amber-700/70 bg-amber-950/30 p-4">
+                <div className="mb-1 font-display text-base font-semibold text-amber-200">
+                  {pending.filename}
+                </div>
                 <p className="mb-3 text-xs text-amber-400/80">
                   {pending.summary.exportedAt
                     ? `Exported ${new Date(pending.summary.exportedAt).toLocaleString()}`
                     : "No export date recorded"}
                 </p>
-                <dl className="mb-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-neutral-300 sm:grid-cols-3">
+                <dl className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-ink-200 sm:grid-cols-3">
                   <Stat label="Drinks tracked" value={pending.summary.drinksTracked} />
                   <Stat label="Answers logged" value={pending.summary.totalAnswers} />
                   <Stat
@@ -304,10 +322,11 @@ export default function Dashboard() {
                     Cancel
                   </Button>
                 </div>
-                <p className="mt-3 text-xs text-neutral-500">
-                  <strong className="text-neutral-400">Replace</strong> wipes what's in this browser and
-                  uses the file instead. <strong className="text-neutral-400">Merge</strong> keeps both,
-                  preferring whichever has more answers logged per drink.
+                <p className="mt-3 text-xs leading-relaxed text-ink-400">
+                  <strong className="font-semibold text-ink-200">Replace</strong> wipes what's in this
+                  browser and uses the file instead.{" "}
+                  <strong className="font-semibold text-ink-200">Merge</strong> keeps both, preferring
+                  whichever has more answers logged per drink.
                 </p>
               </div>
             )}
@@ -321,8 +340,8 @@ export default function Dashboard() {
               Reset progress
             </Button>
           ) : (
-            <Card className="border-red-800 bg-red-950/30 p-4">
-              <p className="mb-3 text-sm text-red-200">
+            <Card accent="border-l-rose-600" className="border-rose-900/70 bg-rose-950/30 p-5">
+              <p className="mb-3 text-sm leading-relaxed text-rose-200">
                 This wipes all mastery data, saved/skipped flags, and personal notes in this browser.
                 It cannot be undone — export a save file first if you might want it back.
               </p>
@@ -352,8 +371,8 @@ export default function Dashboard() {
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="font-medium tabular-nums text-neutral-200">{value}</dd>
+      <dt className="text-[11px] uppercase tracking-wide text-ink-400">{label}</dt>
+      <dd className="font-display font-semibold tabular-nums text-ink-100">{value}</dd>
     </div>
   );
 }

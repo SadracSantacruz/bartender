@@ -178,57 +178,61 @@ export default function TicketMode() {
     return (
       <Layout title="Ticket Mode">
         <div className="space-y-6">
-          <Card accent="border-l-emerald-600" className="p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+          <Card accent="border-l-emerald-500" glow className="p-7 text-center">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Shift time
             </p>
-            <div className="mt-2 text-6xl font-bold tabular-nums text-emerald-400">
+            <div className="mt-2 font-display text-6xl font-bold leading-none tabular-nums text-emerald-400">
               {formatElapsed(elapsedMs)}
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
-                <div className="text-xs uppercase tracking-widest text-neutral-500">Glass</div>
-                <div className="mt-0.5 text-xl font-semibold tabular-nums text-neutral-100">
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-ink-800 bg-ink-950/40 p-3">
+                <div className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+                  Glass
+                </div>
+                <div className="mt-1 font-display text-2xl font-bold tabular-nums text-ink-100">
                   {glassCorrectCount}
-                  <span className="text-sm text-neutral-500">/{results.length}</span>
+                  <span className="text-base font-medium text-ink-500">/{results.length}</span>
                 </div>
               </div>
-              <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
-                <div className="text-xs uppercase tracking-widest text-neutral-500">Base</div>
-                <div className="mt-0.5 text-xl font-semibold tabular-nums text-neutral-100">
+              <div className="rounded-xl border border-ink-800 bg-ink-950/40 p-3">
+                <div className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+                  Base
+                </div>
+                <div className="mt-1 font-display text-2xl font-bold tabular-nums text-ink-100">
                   {baseCorrectCount}
-                  <span className="text-sm text-neutral-500">/{results.length}</span>
+                  <span className="text-base font-medium text-ink-500">/{results.length}</span>
                 </div>
               </div>
             </div>
-            <ProgressBar pct={pct} className="mt-4" />
+            <ProgressBar pct={pct} className="mt-5" />
           </Card>
 
           {missed.length > 0 && (
             <div>
               <SectionTitle
-                right={
-                  <span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>
-                }
+                right={<span className="text-xs tabular-nums text-ink-400">{missed.length}</span>}
               >
                 Tickets with misses
               </SectionTitle>
               <div className="space-y-2">
                 {missed.map((r, i) => (
-                  <Card key={i} accent="border-l-red-700" className="p-3">
-                    <div className="font-medium text-neutral-50">{r.drink.drink.name}</div>
+                  <Card key={i} accent="border-l-rose-600" className="p-4">
+                    <div className="font-mono text-base font-semibold text-ink-100">
+                      {r.drink.drink.name}
+                    </div>
                     {!r.glassCorrect && (
-                      <div className="mt-1 text-sm">
-                        <span className="text-red-400">Glass: {r.glassGuess || "(blank)"}</span>
-                        <span className="text-neutral-500"> &mdash; correct: </span>
-                        <span className="text-emerald-400">{r.drink.drink.glass}</span>
+                      <div className="mt-1.5 text-sm">
+                        <span className="text-rose-400">Glass: {r.glassGuess || "(blank)"}</span>
+                        <span className="text-ink-500"> &mdash; correct: </span>
+                        <span className="font-medium text-emerald-400">{r.drink.drink.glass}</span>
                       </div>
                     )}
                     {!r.baseCorrect && (
-                      <div className="mt-1 text-sm">
-                        <span className="text-red-400">Base: {r.baseGuess || "(blank)"}</span>
-                        <span className="text-neutral-500"> &mdash; correct: </span>
-                        <span className="text-emerald-400">{r.drink.drink.base}</span>
+                      <div className="mt-1.5 text-sm">
+                        <span className="text-rose-400">Base: {r.baseGuess || "(blank)"}</span>
+                        <span className="text-ink-500"> &mdash; correct: </span>
+                        <span className="font-medium text-emerald-400">{r.drink.drink.base}</span>
                       </div>
                     )}
                   </Card>
@@ -249,10 +253,11 @@ export default function TicketMode() {
   const lastResult = revealed ? results[results.length - 1] : null;
 
   function fieldClass(ok: boolean | undefined) {
-    if (!revealed) return "border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20";
+    if (!revealed)
+      return "border-ink-700 focus:border-brass-500 focus:ring-2 focus:ring-brass-500/25";
     return ok
       ? "border-emerald-500 bg-emerald-950/30 text-emerald-100"
-      : "border-red-500 bg-red-950/30 text-red-100";
+      : "border-rose-500 bg-rose-950/30 text-rose-100";
   }
 
   return (
@@ -260,41 +265,41 @@ export default function TicketMode() {
       <div className="space-y-5">
         <div>
           <div className="mb-1.5 flex items-end justify-between gap-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+            <span className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Ticket {index + 1} of {tickets.length}
             </span>
-            <span className="text-3xl font-bold leading-none tabular-nums text-neutral-50">
+            <span className="font-display text-4xl font-bold leading-none tabular-nums text-ink-100">
               {formatElapsed(elapsedMs)}
             </span>
           </div>
-          <ProgressBar pct={((index + (revealed ? 1 : 0)) / tickets.length) * 100} />
+          <ProgressBar tone="brand" pct={((index + (revealed ? 1 : 0)) / tickets.length) * 100} />
         </div>
 
-        <Card className="border-dashed bg-neutral-950/60 p-6 text-center">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
-            Ticket
+        <Card className="border-2 border-dashed border-ink-700 bg-ink-950/60 px-6 py-7 text-center">
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.3em] text-ink-500">
+            &mdash;&mdash; Ticket &mdash;&mdash;
           </div>
-          <div className="font-mono text-3xl font-bold leading-tight text-neutral-50">
+          <div className="mt-3 font-mono text-3xl font-bold leading-tight tracking-tight text-ink-100">
             {current?.drink.name}
           </div>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {current ? (
               <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
                 {current.deck.name}
               </Badge>
             ) : null}
             {current?.drink.verify ? (
-              <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+              <Badge className="border-amber-700 bg-amber-950/50 text-amber-300">unverified</Badge>
             ) : null}
           </div>
           {current?.drink.verify && (
-            <p className="mt-2 text-xs leading-relaxed text-amber-400">{current.drink.verify}</p>
+            <p className="mt-3 text-xs leading-relaxed text-amber-400">{current.drink.verify}</p>
           )}
         </Card>
 
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+            <label className="mb-1.5 block font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
               Glass
             </label>
             <input
@@ -305,17 +310,19 @@ export default function TicketMode() {
               onKeyDown={handleGlassKeyDown}
               disabled={revealed}
               autoComplete="off"
-              className={`min-h-[52px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-100 ${fieldClass(
+              className={`min-h-[56px] w-full rounded-xl border-2 bg-ink-900 px-4 py-2 text-lg text-ink-100 placeholder-ink-500 outline-none transition-colors duration-100 disabled:opacity-100 ${fieldClass(
                 lastResult?.glassCorrect
               )}`}
             />
             {revealed && !lastResult?.glassCorrect && (
-              <p className="mt-1 text-sm text-emerald-400">Correct: {current?.drink.glass}</p>
+              <p className="mt-1.5 text-sm font-medium text-emerald-400">
+                Correct: {current?.drink.glass}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+            <label className="mb-1.5 block font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
               Base
             </label>
             <input
@@ -326,12 +333,14 @@ export default function TicketMode() {
               onKeyDown={handleBaseKeyDown}
               disabled={revealed}
               autoComplete="off"
-              className={`min-h-[52px] w-full rounded-xl border-2 bg-neutral-900 px-4 py-2 text-lg text-neutral-100 outline-none transition-colors duration-100 ${fieldClass(
+              className={`min-h-[56px] w-full rounded-xl border-2 bg-ink-900 px-4 py-2 text-lg text-ink-100 placeholder-ink-500 outline-none transition-colors duration-100 disabled:opacity-100 ${fieldClass(
                 lastResult?.baseCorrect
               )}`}
             />
             {revealed && !lastResult?.baseCorrect && (
-              <p className="mt-1 text-sm text-emerald-400">Correct: {current?.drink.base}</p>
+              <p className="mt-1.5 text-sm font-medium text-emerald-400">
+                Correct: {current?.drink.base}
+              </p>
             )}
           </div>
         </div>

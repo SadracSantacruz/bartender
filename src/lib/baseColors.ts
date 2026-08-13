@@ -102,9 +102,9 @@ const BASE_COLORS: Array<{ match: RegExp; color: BaseColor }> = [
 ];
 
 const FALLBACK: BaseColor = {
-  border: "border-l-neutral-600",
-  badge: "border-neutral-700 bg-neutral-800/60 text-neutral-300",
-  chipActive: "border-neutral-500 bg-neutral-800 text-neutral-200",
+  border: "border-l-ink-600",
+  badge: "border-ink-700 bg-ink-850/60 text-ink-300",
+  chipActive: "border-ink-500 bg-ink-800 text-ink-200",
 };
 
 export function baseColorFor(base: string): BaseColor {

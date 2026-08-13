@@ -60,11 +60,13 @@ export default function Home() {
   const hasSelection = selectedDeckIds.length > 0 && drinkCount > 0;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen text-ink-100">
       <div className="mx-auto max-w-3xl px-4 py-8">
         <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-100">Bar Drill</h1>
-          <p className="mt-1 text-neutral-400">Pick your decks, then pick a mode.</p>
+          <h1 className="font-display text-4xl font-bold tracking-[-0.03em] text-ink-100 sm:text-5xl">
+            Bar Drill
+          </h1>
+          <p className="mt-2 text-ink-400">Pick your decks, then pick a mode.</p>
         </header>
 
         {LOADED_DECKS.length === 0 ? (
@@ -78,7 +80,7 @@ export default function Home() {
             <section>
               <SectionTitle
                 right={
-                  <span className="text-xs tabular-nums text-neutral-500">
+                  <span className="text-xs tabular-nums text-ink-400">
                     {selectedDeckIds.length} of {LOADED_DECKS.length} selected
                   </span>
                 }
@@ -91,27 +93,27 @@ export default function Home() {
                   return (
                     <label
                       key={deck.id}
-                      className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-xl border bg-neutral-900/60 p-4 shadow-sm shadow-black/30 transition-colors duration-100 ${
+                      className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-2xl border p-4 shadow-sm shadow-black/30 transition-colors duration-100 ${
                         checked
-                          ? "border-emerald-700 bg-emerald-950/30"
-                          : "border-neutral-800 hover:border-neutral-700 active:bg-neutral-900"
+                          ? "border-brass-600 bg-brass-500/10 ring-1 ring-brass-500/20"
+                          : "border-ink-800 bg-ink-900/80 hover:border-ink-700 active:bg-ink-850"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        className="h-5 w-5 shrink-0 accent-emerald-500"
+                        className="h-5 w-5 shrink-0 accent-brass-500"
                         checked={checked}
                         onChange={() => toggleDeck(deck.id)}
                       />
                       <div className="min-w-0">
                         <div
-                          className={`font-medium ${checked ? "text-emerald-100" : "text-neutral-100"}`}
+                          className={`font-display font-semibold ${checked ? "text-brass-300" : "text-ink-100"}`}
                         >
                           {deck.name}
                         </div>
-                        <div className="mt-0.5 text-sm text-neutral-400">
+                        <div className="mt-0.5 text-sm text-ink-400">
                           {deck.description}{" "}
-                          <span className="tabular-nums text-neutral-500">
+                          <span className="tabular-nums text-ink-500">
                             · {deck.drinks.length} drinks
                           </span>
                         </div>
@@ -158,8 +160,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                <p className="text-sm text-neutral-400">
-                  <span className="font-medium tabular-nums text-neutral-200">{drinkCount}</span> drinks
+                <p className="text-sm text-ink-400">
+                  <span className="font-medium tabular-nums text-ink-200">{drinkCount}</span> drinks
                   match your filters.
                 </p>
               </section>
@@ -177,16 +179,18 @@ export default function Home() {
                       type="button"
                       disabled={disabled}
                       onClick={() => navigate(mode.screen)}
-                      className="flex min-h-[76px] flex-col justify-center rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 text-left shadow-sm shadow-black/30 transition-colors duration-100 hover:border-emerald-700 hover:bg-neutral-900 active:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-800 disabled:hover:bg-neutral-900/60"
+                      className="flex min-h-[76px] flex-col justify-center rounded-2xl border border-ink-800 bg-ink-900/80 p-4 text-left shadow-lg shadow-black/30 outline-none transition-colors duration-100 hover:border-brass-600/70 hover:bg-ink-850 focus-visible:border-brass-500 active:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-ink-800 disabled:hover:bg-ink-900/80"
                     >
-                      <div className="text-base font-semibold text-neutral-100">{mode.label}</div>
-                      <div className="mt-0.5 text-sm leading-snug text-neutral-400">{mode.desc}</div>
+                      <div className="font-display text-base font-semibold tracking-tight text-ink-100">
+                        {mode.label}
+                      </div>
+                      <div className="mt-0.5 text-sm leading-snug text-ink-400">{mode.desc}</div>
                     </button>
                   );
                 })}
               </div>
               {!hasSelection && (
-                <p className="mt-3 text-sm text-neutral-400">
+                <p className="mt-3 text-sm text-ink-400">
                   Select at least one deck above to unlock the quiz modes.
                 </p>
               )}

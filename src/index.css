@@ -1,17 +1,98 @@
 @import "tailwindcss";
 
+/* Self-hosted so the app still looks right with no signal behind the bar. */
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+/*
+ * Design tokens. The old palette was flat neutral gray on near-black with one
+ * muted green, which read as "unstyled admin panel". This is a warmer, deeper
+ * base (a hint of plum in the darks, like a dim bar) with a brass/gold brand
+ * accent, and punchier semantic colors so right/wrong reads instantly.
+ */
+@theme {
+  --font-display: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* Warm-tinted dark ramp (replaces flat neutral-9xx) */
+  --color-ink-950: #0b0910;
+  --color-ink-900: #12101a;
+  --color-ink-850: #171522;
+  --color-ink-800: #1e1b2b;
+  --color-ink-700: #2a2639;
+  --color-ink-600: #3a3550;
+  --color-ink-500: #565073;
+  --color-ink-400: #8b84a8;
+  --color-ink-300: #b6b0cc;
+  --color-ink-200: #d9d5e6;
+  --color-ink-100: #f0eef7;
+
+  /* Brand: brass / bar gold */
+  --color-brass-300: #ffd98a;
+  --color-brass-400: #f7c250;
+  --color-brass-500: #e8a628;
+  --color-brass-600: #c4841a;
+  --color-brass-700: #8f5f13;
+}
+
 :root {
   color-scheme: dark;
 }
 
-body {
-  margin: 0;
-  background-color: #0a0a0a;
-  color: #f5f5f5;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
+html {
+  scroll-behavior: smooth;
 }
 
-* {
-  transition-duration: 100ms;
+body {
+  margin: 0;
+  background-color: var(--color-ink-950);
+  /* Subtle warm glow so a full-screen dark page isn't a dead flat rectangle. */
+  background-image:
+    radial-gradient(1100px 600px at 50% -10%, rgba(232, 166, 40, 0.09), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(120, 60, 160, 0.07), transparent 60%);
+  background-attachment: fixed;
+  color: var(--color-ink-100);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Numbers that update in place (timers, scores, counts) shouldn't jitter. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: rgba(232, 166, 40, 0.3);
+}
+
+/* Keep the app feeling instant — nothing animates longer than 150ms. */
+*,
+*::before,
+*::after {
+  transition-duration: 120ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

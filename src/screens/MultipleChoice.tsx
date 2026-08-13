@@ -261,34 +261,36 @@ export default function MultipleChoice() {
     return (
       <Layout title="Multiple Choice">
         <Card accent="border-l-emerald-600" className="mb-6 p-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+          <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
             Round complete
           </p>
-          <div className={`mt-2 text-5xl font-bold tabular-nums ${accuracyText(pct)}`}>
+          <div
+            className={`mt-2 font-display text-5xl font-bold tabular-nums ${accuracyText(pct)}`}
+          >
             {scoreCorrect}
-            <span className="text-2xl font-semibold text-neutral-500">/{questions.length}</span>
+            <span className="text-2xl font-semibold text-ink-500">/{questions.length}</span>
           </div>
-          <p className="mt-1 text-sm text-neutral-400">correct</p>
+          <p className="mt-1 text-sm text-ink-400">correct</p>
           <ProgressBar pct={pct} className="mt-4" />
         </Card>
 
         {missed.length > 0 ? (
           <div className="mb-6">
             <SectionTitle
-              right={<span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>}
+              right={<span className="text-xs tabular-nums text-ink-400">{missed.length}</span>}
             >
               Missed questions
             </SectionTitle>
             <div className="space-y-2">
               {missed.map((m, i) => (
-                <Card key={i} accent="border-l-red-700" className="p-3">
-                  <div className="font-medium text-neutral-100">
+                <Card key={i} accent="border-l-rose-600" className="p-3">
+                  <div className="font-display text-base font-semibold text-ink-100">
                     {m.drinkName}{" "}
-                    <span className="text-sm font-normal text-neutral-500">
+                    <span className="font-sans text-sm font-normal text-ink-400">
                       &middot; {fieldLabel(m.field)}
                     </span>
                   </div>
-                  <div className="mt-1 text-sm text-red-400">Your answer: {m.yourAnswer}</div>
+                  <div className="mt-1 text-sm text-rose-400">Your answer: {m.yourAnswer}</div>
                   <div className="text-sm text-emerald-400">Correct: {m.correctAnswer}</div>
                 </Card>
               ))}
@@ -313,26 +315,27 @@ export default function MultipleChoice() {
     <Layout title="Multiple Choice">
       <div className="mb-4">
         <div className="mb-1.5 flex items-baseline justify-between gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
-            Question {index + 1} of {questions.length}
+          <span className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
+            Question <span className="tabular-nums">{index + 1}</span> of{" "}
+            <span className="tabular-nums">{questions.length}</span>
           </span>
-          <span className="text-xs tabular-nums text-neutral-500">
+          <span className="text-xs tabular-nums text-ink-400">
             {answered - missed.length} correct
           </span>
         </div>
-        <ProgressBar pct={(answered / questions.length) * 100} />
+        <ProgressBar tone="brand" pct={(answered / questions.length) * 100} />
       </div>
 
-      <Card className="mb-4 p-5">
-        <p className="text-xl font-semibold leading-snug text-neutral-50 sm:text-2xl">
+      <Card glow className="mb-4 p-5 sm:p-6">
+        <p className="font-display text-2xl font-semibold leading-snug text-ink-100 sm:text-3xl">
           {questionPrompt(current.drinkName, current.field)}
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Badge className="border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
             {current.deckName}
           </Badge>
           {current.verify && (
-            <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+            <Badge className="border-amber-600/60 bg-amber-950/60 text-amber-300">unverified</Badge>
           )}
         </div>
       </Card>
@@ -342,19 +345,19 @@ export default function MultipleChoice() {
           const isCorrect = opt === current.correctValue;
           const isPicked = selected === i;
           let cls =
-            "border-neutral-800 bg-neutral-900/60 text-neutral-100 hover:border-neutral-600 hover:bg-neutral-900 active:bg-neutral-800";
-          let numCls = "border-neutral-700 text-neutral-500";
+            "border-ink-800 bg-ink-900/80 text-ink-100 shadow-sm shadow-black/30 hover:border-brass-600/70 hover:bg-ink-850 active:bg-ink-800";
+          let numCls = "border-brass-600/50 bg-brass-500/10 text-brass-300";
           if (revealed) {
             if (isCorrect) {
               cls =
-                "border-emerald-500 bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/40";
-              numCls = "border-emerald-500 text-emerald-300";
+                "border-emerald-500 bg-emerald-950/50 text-emerald-100 ring-2 ring-emerald-500/40";
+              numCls = "border-emerald-500 bg-emerald-500/15 text-emerald-300";
             } else if (isPicked) {
-              cls = "border-red-600 bg-red-950/50 text-red-100 ring-1 ring-red-500/30";
-              numCls = "border-red-600 text-red-300";
+              cls = "border-rose-500 bg-rose-950/50 text-rose-100 ring-2 ring-rose-500/35";
+              numCls = "border-rose-500 bg-rose-500/15 text-rose-300";
             } else {
-              cls = "border-neutral-800 bg-neutral-900/30 text-neutral-500 opacity-60";
-              numCls = "border-neutral-800 text-neutral-600";
+              cls = "border-ink-800 bg-ink-900/40 text-ink-500 opacity-60";
+              numCls = "border-ink-700 text-ink-500";
             }
           }
           return (
@@ -375,7 +378,7 @@ export default function MultipleChoice() {
                 <span className="flex-none text-lg leading-none text-emerald-400">&#10003;</span>
               )}
               {revealed && isPicked && !isCorrect && (
-                <span className="flex-none text-lg leading-none text-red-400">&#10007;</span>
+                <span className="flex-none text-lg leading-none text-rose-400">&#10007;</span>
               )}
             </button>
           );
@@ -385,16 +388,16 @@ export default function MultipleChoice() {
       {revealed && current.verify && (
         <Card accent="border-l-amber-600" className="mt-3 p-3">
           <div className="mb-1">
-            <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
+            <Badge className="border-amber-600/60 bg-amber-950/60 text-amber-300">unverified</Badge>
           </div>
-          <p className="text-xs leading-relaxed text-amber-400">{current.verify}</p>
+          <p className="text-xs leading-relaxed text-amber-200/90">{current.verify}</p>
         </Card>
       )}
 
       {revealed && (
         <Button variant="secondary" size="lg" className="mt-4 w-full" onClick={advance}>
           {index + 1 >= questions.length ? "See results" : "Next"}
-          <span className="text-xs text-neutral-500">(Enter / Space)</span>
+          <span className="text-xs font-normal text-ink-400">(Enter / Space)</span>
         </Button>
       )}
     </Layout>

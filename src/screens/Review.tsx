@@ -32,9 +32,9 @@ const FIELD_LABELS: Record<DrinkField, string> = {
 const EMPTY_FIELDS: DrinkField[] = [];
 
 const REASON_STYLES: Record<ReviewReason, string> = {
-  saved: "border-sky-700 bg-sky-950/60 text-sky-300",
-  "never seen": "border-purple-700 bg-purple-950/60 text-purple-300",
-  shaky: "border-amber-700 bg-amber-950/60 text-amber-300",
+  saved: "border-sky-700/70 bg-sky-950/50 text-sky-300",
+  "never seen": "border-purple-700/70 bg-purple-950/50 text-purple-300",
+  shaky: "border-amber-700/70 bg-amber-950/50 text-amber-300",
 };
 
 export default function Review() {
@@ -108,12 +108,13 @@ export default function Review() {
     setRevealed(false);
   }
 
+
   if (pool.length === 0) {
     return (
       <Layout title="Review">
         <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back{" "}
-          <button className="text-emerald-400 underline" onClick={() => navigate("home")}>
+          <button className="font-medium text-brass-400 underline" onClick={() => navigate("home")}>
             Home
           </button>{" "}
           and pick a deck.
@@ -125,9 +126,11 @@ export default function Review() {
   if (round.length === 0) {
     return (
       <Layout title="Review">
-        <Card accent="border-l-emerald-600" className="p-8 text-center">
-          <p className="text-xl font-semibold text-emerald-300">Nothing needs review &#127881;</p>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-400">
+        <Card accent="border-l-emerald-500" glow className="p-8 text-center">
+          <p className="font-display text-2xl font-semibold text-emerald-300">
+            Nothing needs review &#127881;
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-400">
             Every drink in your selection is either mastered or not flagged. Save drinks from Browse, or
             keep quizzing &mdash; anything you miss lands back here.
           </p>
@@ -146,26 +149,32 @@ export default function Review() {
     return (
       <Layout title="Review">
         <div className="space-y-5">
-          <Card accent="border-l-emerald-600" className="p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+          <Card accent="border-l-emerald-500" glow className="p-6 text-center">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Review complete
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-emerald-800 bg-emerald-950/30 p-4">
-                <div className="text-4xl font-bold tabular-nums text-emerald-300">{gotIt}</div>
-                <div className="mt-1 text-xs uppercase tracking-widest text-neutral-500">Got it</div>
+              <div className="rounded-2xl border border-emerald-800/70 bg-emerald-950/30 p-4">
+                <div className="font-display text-5xl font-bold tabular-nums text-emerald-300">
+                  {gotIt}
+                </div>
+                <div className="mt-1.5 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+                  Got it
+                </div>
               </div>
-              <div className="rounded-lg border border-amber-800 bg-amber-950/30 p-4">
-                <div className="text-4xl font-bold tabular-nums text-amber-300">{stillShaky}</div>
-                <div className="mt-1 text-xs uppercase tracking-widest text-neutral-500">
+              <div className="rounded-2xl border border-amber-800/70 bg-amber-950/30 p-4">
+                <div className="font-display text-5xl font-bold tabular-nums text-amber-300">
+                  {stillShaky}
+                </div>
+                <div className="mt-1.5 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                   Still shaky
                 </div>
               </div>
             </div>
-            <ProgressBar pct={pct} className="mt-4" />
+            <ProgressBar pct={pct} className="mt-5" />
           </Card>
 
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-ink-400">
             {remaining === 0
               ? "Nothing left in the review pool right now. Nice."
               : `${remaining} drink${remaining === 1 ? "" : "s"} still in the review pool.`}
@@ -200,18 +209,18 @@ export default function Review() {
       <div className="space-y-4">
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+            <span className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Card {index + 1} of {round.length}
             </span>
-            <span className="text-xs tabular-nums text-neutral-500">
+            <span className="text-xs tabular-nums text-ink-400">
               {gotIt} got &middot; {stillShaky} shaky
             </span>
           </div>
-          <ProgressBar pct={(index / round.length) * 100} />
+          <ProgressBar tone="brand" pct={(index / round.length) * 100} />
         </div>
 
-        <Card accent={color.border} className="p-5">
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <Card accent={color.border} className="p-6">
+          <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
             {reasons.map((r) => (
               <Badge key={r} className={REASON_STYLES[r]}>
                 {r}
@@ -219,24 +228,24 @@ export default function Review() {
             ))}
           </div>
 
-          <h2 className="text-3xl font-bold leading-tight text-neutral-50">{drink.name}</h2>
-          <p className="mt-1.5 text-xs uppercase tracking-widest text-neutral-500">
+          <h2 className="font-display text-4xl font-bold leading-tight text-ink-100">{drink.name}</h2>
+          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-ink-400">
             {deck.name} &middot; Tier {drink.tier} &middot; {drink.category}
           </p>
 
           {!revealed ? (
-            <p className="mt-4 text-sm leading-relaxed text-neutral-400">
+            <p className="mt-5 text-sm leading-relaxed text-ink-400">
               Say the full build out loud &mdash; glass, ice, ingredients, garnish &mdash; then reveal.
             </p>
           ) : (
-            <div className="mt-4 space-y-4 border-t border-neutral-800 pt-4">
+            <div className="mt-5 space-y-4 border-t border-ink-800 pt-4">
               <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                 {documentedFields.map(({ field, label }) => (
                   <div key={field} className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                    <span className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-brass-500">
                       {label}
                     </span>
-                    <span className="text-base leading-snug text-neutral-100">
+                    <span className="text-base leading-snug text-ink-100">
                       {getFieldValue(drink, field)}
                     </span>
                   </div>
@@ -245,10 +254,10 @@ export default function Review() {
 
               {drink.ingredients.length > 0 && (
                 <div>
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                  <div className="mb-1 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-brass-500">
                     Ingredients
                   </div>
-                  <ul className="list-inside list-disc space-y-0.5 text-base text-neutral-100">
+                  <ul className="list-inside list-disc space-y-0.5 text-base text-ink-100 marker:text-ink-500">
                     {drink.ingredients.map((ing, i) => (
                       <li key={i}>{ing}</li>
                     ))}
@@ -257,41 +266,41 @@ export default function Review() {
               )}
 
               {drink.notes && (
-                <p className="text-sm leading-relaxed text-neutral-400">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                <p className="text-sm leading-relaxed text-ink-300">
+                  <span className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-brass-500">
                     Notes{" "}
                   </span>
                   {drink.notes}
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-2 border-t border-neutral-800 pt-3">
+              <div className="flex flex-wrap gap-2 border-t border-ink-800 pt-3">
                 <button
                   type="button"
                   onClick={() => toggleSaved(deck.id, drink.id)}
-                  className={`min-h-[40px] rounded-lg border px-3 py-1.5 text-sm transition-colors duration-100 ${
+                  className={`min-h-[44px] rounded-xl border px-3.5 py-1.5 text-sm font-medium transition-colors duration-100 ${
                     saved
                       ? "border-sky-600 bg-sky-900/40 text-sky-300"
-                      : "border-neutral-700 bg-neutral-900/50 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+                      : "border-ink-700 bg-ink-850 text-ink-300 hover:border-ink-600 hover:text-ink-100"
                   }`}
                 >
-                  {saved ? "\u2605 Saved \u2014 tap to unsave" : "\u2606 Save for later"}
+                  {saved ? "★ Saved — tap to unsave" : "☆ Save for later"}
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleSkipped(deck.id, drink.id)}
                   title="Won't show up in Review or quizzes anymore"
-                  className={`min-h-[40px] rounded-lg border px-3 py-1.5 text-sm transition-colors duration-100 ${
+                  className={`min-h-[44px] rounded-xl border px-3.5 py-1.5 text-sm font-medium transition-colors duration-100 ${
                     skipped
-                      ? "border-neutral-500 bg-neutral-800 text-neutral-300"
-                      : "border-neutral-700 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
+                      ? "border-ink-500 bg-ink-700 text-ink-200"
+                      : "border-ink-700 bg-ink-850 text-ink-400 hover:border-ink-600 hover:text-ink-200"
                   }`}
                 >
-                  {skipped ? "\u{1F6AB} Skipped \u2014 tap to unskip" : "\u{1F6AB} Don't need to know this"}
+                  {skipped ? "\u{1F6AB} Skipped — tap to unskip" : "\u{1F6AB} Don't need to know this"}
                 </button>
               </div>
 
-              <div className="border-t border-neutral-800 pt-3">
+              <div className="border-t border-ink-800 pt-3">
                 <SectionTitle>Shaky on</SectionTitle>
                 <div className="mb-3 flex flex-wrap items-center gap-1.5">
                   {DRINK_FIELDS.map((field) => {
@@ -301,10 +310,10 @@ export default function Review() {
                         key={field}
                         type="button"
                         onClick={() => toggleShakyField(deck.id, drink.id, field)}
-                        className={`min-h-[32px] rounded-full border px-3 py-1 text-xs transition-colors duration-100 ${
+                        className={`min-h-[36px] rounded-full border px-3.5 py-1 text-xs font-medium transition-colors duration-100 ${
                           active
                             ? "border-amber-600 bg-amber-900/40 text-amber-300"
-                            : "border-neutral-800 bg-neutral-900/50 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
+                            : "border-ink-700 bg-ink-850 text-ink-400 hover:border-ink-600 hover:text-ink-200"
                         }`}
                       >
                         {FIELD_LABELS[field]}
@@ -318,7 +327,7 @@ export default function Review() {
                   onBlur={commitNote}
                   placeholder={"Personal note — e.g. 'confused vodka for tequila', 'forgot the cherry garnish'..."}
                   rows={2}
-                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 outline-none transition-colors duration-100 focus:border-neutral-600 focus:ring-2 focus:ring-neutral-700/40"
+                  className="w-full rounded-xl border border-ink-800 bg-ink-950/50 px-3 py-2 text-sm text-ink-200 placeholder-ink-500 outline-none transition-colors duration-100 focus:border-brass-500 focus:ring-2 focus:ring-brass-500/25"
                 />
               </div>
             </div>
@@ -331,10 +340,10 @@ export default function Review() {
           </Button>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="primary" size="lg" onClick={() => grade(true)}>
+            <Button variant="success" size="lg" className="min-h-[56px]" onClick={() => grade(true)}>
               Got it
             </Button>
-            <Button variant="warn" size="lg" onClick={() => grade(false)}>
+            <Button variant="warn" size="lg" className="min-h-[56px]" onClick={() => grade(false)}>
               Still shaky
             </Button>
           </div>

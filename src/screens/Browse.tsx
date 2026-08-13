@@ -13,7 +13,7 @@ const TIER_STYLES: Record<number, string> = {
   2: "border-cyan-700 bg-cyan-950/60 text-cyan-300",
   3: "border-violet-700 bg-violet-950/60 text-violet-300",
 };
-const TIER_FALLBACK = "border-neutral-700 bg-neutral-800/60 text-neutral-300";
+const TIER_FALLBACK = "border-ink-700 bg-ink-850/60 text-ink-300";
 
 // Stable empty-array reference. Returning a fresh `[]` from a zustand selector
 // makes every render look like a state change (Object.is compares by identity),
@@ -143,7 +143,7 @@ export default function Browse() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search name, category, base, glass, garnish, ingredient..."
-            className="min-h-[52px] w-full rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-base text-neutral-100 shadow-sm shadow-black/30 outline-none transition-colors duration-100 placeholder:text-neutral-500 focus:border-emerald-600"
+            className="min-h-[52px] w-full rounded-xl border border-ink-800 bg-ink-900/80 px-4 py-3 text-base text-ink-100 shadow-sm shadow-black/30 outline-none transition-colors duration-100 placeholder:text-ink-500 focus:border-brass-500"
           />
 
           <div className="flex items-center justify-between gap-3">
@@ -154,7 +154,7 @@ export default function Browse() {
             >
               {filtersOpen ? "Hide filters" : "Filters"}
               {activeFilterCount > 0 && (
-                <span className="rounded-full bg-emerald-500/20 px-1.5 text-xs tabular-nums">
+                <span className="rounded-full bg-brass-500/25 px-1.5 text-xs tabular-nums">
                   {activeFilterCount}
                 </span>
               )}
@@ -166,7 +166,7 @@ export default function Browse() {
             )}
           </div>
 
-          <Card className={`divide-y divide-neutral-800/80 ${filtersOpen ? "" : "hidden"}`}>
+          <Card className={`divide-y divide-ink-800/80 ${filtersOpen ? "" : "hidden"}`}>
             {decks.length > 1 && (
               <FilterRow label="Deck">
                 <Chip active={deckId === "all"} onClick={() => setDeckId("all")} label="All decks" />
@@ -232,7 +232,7 @@ export default function Browse() {
                 }}
                 label="🚫 Skipped only"
                 count={skippedCount}
-                activeClass="border-neutral-500 bg-neutral-800 text-neutral-100"
+                activeClass="border-ink-500 bg-ink-800 text-ink-100"
               />
               <Chip
                 active={hideSkipped}
@@ -242,8 +242,8 @@ export default function Browse() {
             </FilterRow>
           </Card>
 
-          <p className="text-sm text-neutral-400">
-            <span className="font-medium tabular-nums text-neutral-200">{filtered.length}</span> drink
+          <p className="text-sm text-ink-400">
+            <span className="font-medium tabular-nums text-ink-200">{filtered.length}</span> drink
             {filtered.length === 1 ? "" : "s"}
           </p>
         </div>
@@ -271,7 +271,7 @@ export default function Browse() {
 function FilterRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2">
-      <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+      <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
         {label}
       </span>
       {children}
@@ -306,21 +306,24 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold leading-tight text-neutral-100">{drink.name}</h3>
+            <h3 className="font-display text-lg font-semibold leading-tight text-ink-100">
+              {drink.name}
+            </h3>
             {drink.verify && (
               <Badge className="border-amber-800 bg-amber-950/50 text-amber-300">unverified</Badge>
             )}
-            {skipped && (
-              <Badge className="border-neutral-600 bg-neutral-800 text-neutral-200">skipped</Badge>
-            )}
+            {skipped && <Badge className="border-ink-600 bg-ink-800 text-ink-200">skipped</Badge>}
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Badge className="border-fuchsia-700 bg-fuchsia-950/40 text-fuchsia-300">{deck.name}</Badge>
             <Badge className={TIER_STYLES[drink.tier] ?? TIER_FALLBACK}>Tier {drink.tier}</Badge>
-            <Badge className="border-neutral-700 bg-neutral-800/60 text-neutral-300">
-              {drink.category}
+            <Badge className="border-ink-700 bg-ink-850/60 text-ink-300">{drink.category}</Badge>
+            {/* Base can be a full pour spec ("2oz Gin or Vodka, depending on
+                customer preference"), so it stays sentence case — the Badge
+                default uppercase is only legible for short labels. */}
+            <Badge plain className={color.badge}>
+              {drink.base}
             </Badge>
-            <Badge className={color.badge}>{drink.base}</Badge>
           </div>
         </div>
 
@@ -341,7 +344,7 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
             title={
               skipped ? "Include this in quizzes again" : "Don't need to know this — exclude from quizzes"
             }
-            className={skipped ? "border-neutral-500 bg-neutral-800 text-neutral-100" : ""}
+            className={skipped ? "border-ink-500 bg-ink-800 text-ink-100" : ""}
           >
             {skipped ? "🚫 Skipped" : "🚫 Skip"}
           </Button>
@@ -358,10 +361,10 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
 
       {drink.ingredients.length > 0 && (
         <div className="mt-4 text-sm">
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
             Ingredients
           </div>
-          <ul className="list-inside list-disc space-y-0.5 text-neutral-200">
+          <ul className="list-inside list-disc space-y-0.5 text-ink-200">
             {drink.ingredients.map((ing, i) => (
               <li key={i}>{ing}</li>
             ))}
@@ -370,24 +373,24 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
       )}
 
       {drink.notes && (
-        <p className="mt-3 text-sm leading-relaxed text-neutral-300">
-          <span className="text-neutral-500">Notes: </span>
+        <p className="mt-3 text-sm leading-relaxed text-ink-300">
+          <span className="text-ink-400">Notes: </span>
           {drink.notes}
         </p>
       )}
 
       {drink.verify && (
-        <p className="mt-3 rounded-lg border border-amber-800 bg-amber-950/30 p-2.5 text-xs leading-relaxed text-amber-300">
+        <p className="mt-3 rounded-xl border border-amber-800 bg-amber-950/30 p-2.5 text-xs leading-relaxed text-amber-300">
           {drink.verify}
         </p>
       )}
 
-      <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950/50 p-3">
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+      <div className="mt-4 rounded-xl border border-ink-800 bg-ink-950/50 p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
           My notes
         </div>
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs text-neutral-400">Shaky on:</span>
+          <span className="mr-1 text-xs text-ink-400">Shaky on:</span>
           {DRINK_FIELDS.map((field) => {
             const active = shakyFields.includes(field);
             return (
@@ -395,10 +398,10 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
                 key={field}
                 type="button"
                 onClick={() => toggleShakyField(deck.id, drink.id, field)}
-                className={`min-h-[32px] rounded-full border px-2.5 py-1 text-xs transition-colors duration-100 ${
+                className={`min-h-[38px] rounded-full border px-3 py-1 text-xs transition-colors duration-100 ${
                   active
                     ? "border-amber-600 bg-amber-900/40 text-amber-200"
-                    : "border-neutral-700 bg-neutral-900/60 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+                    : "border-ink-700 bg-ink-850/80 text-ink-400 hover:border-ink-600 hover:text-ink-200"
                 }`}
               >
                 {FIELD_LABELS[field]}
@@ -412,7 +415,7 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
           onBlur={commitNote}
           placeholder="Personal note — e.g. 'confused vodka for tequila', 'forgot the cherry garnish'..."
           rows={2}
-          className="w-full rounded-lg border border-neutral-800 bg-neutral-950/70 px-3 py-2 text-sm text-neutral-200 outline-none transition-colors duration-100 placeholder:text-neutral-500 focus:border-neutral-600"
+          className="w-full rounded-xl border border-ink-800 bg-ink-950/70 px-3 py-2 text-sm text-ink-200 outline-none transition-colors duration-100 placeholder:text-ink-500 focus:border-brass-500"
         />
       </div>
     </Card>
@@ -422,8 +425,8 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-1.5">
-      <dt className="shrink-0 text-neutral-500">{label}:</dt>
-      <dd className="min-w-0 text-neutral-200">{value}</dd>
+      <dt className="shrink-0 text-ink-400">{label}:</dt>
+      <dd className="min-w-0 text-ink-200">{value}</dd>
     </div>
   );
 }

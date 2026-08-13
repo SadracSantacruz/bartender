@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import { Layout } from "../components/Layout";
 import { validateDeckJson, type ValidationResult } from "../lib/validateDeck";
+import { Button, Card, SectionTitle } from "../components/ui";
 
 export default function Import() {
   const [text, setText] = useState("");
@@ -34,91 +35,107 @@ export default function Import() {
 
   return (
     <Layout title="Import Deck">
-      <div className="space-y-4">
-        <p className="text-sm text-neutral-500">
+      <div className="space-y-5">
+        <p className="text-sm leading-relaxed text-ink-400">
           See{" "}
-          <code className="rounded bg-black/30 px-1">data/decks/_TEMPLATE.json</code> and{" "}
-          <code className="rounded bg-black/30 px-1">data/decks/README.md</code> for the full field
-          reference.
+          <code className="rounded-md bg-ink-850 px-1.5 py-0.5 font-mono text-xs text-brass-300">
+            data/decks/_TEMPLATE.json
+          </code>{" "}
+          and{" "}
+          <code className="rounded-md bg-ink-850 px-1.5 py-0.5 font-mono text-xs text-brass-300">
+            data/decks/README.md
+          </code>{" "}
+          for the full field reference.
         </p>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium uppercase tracking-wide text-neutral-500">
-            Paste deck JSON
-          </label>
+        <section>
+          <SectionTitle>Paste deck JSON</SectionTitle>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             spellCheck={false}
             placeholder="{ &quot;id&quot;: &quot;my-deck&quot;, ... }"
-            className="min-h-[300px] w-full rounded-lg border border-neutral-800 bg-neutral-900/50 p-3 font-mono text-sm text-neutral-100 outline-none focus:border-neutral-600"
+            className="min-h-[300px] w-full rounded-2xl border border-ink-800 bg-ink-950/60 p-4 font-mono text-sm leading-relaxed text-ink-100 placeholder-ink-500 outline-none transition-colors duration-100 focus:border-brass-500 focus:ring-2 focus:ring-brass-500/25"
           />
-        </div>
+        </section>
 
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="lg"
           onClick={handleValidate}
           disabled={text.trim().length === 0}
-          className="min-h-[44px] rounded-lg border border-neutral-700 bg-neutral-900/50 px-4 py-2 text-sm font-medium text-neutral-100 hover:bg-neutral-900 active:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Validate
-        </button>
+        </Button>
 
         {result && !result.valid && (
-          <div className="rounded-lg border border-red-800 bg-red-950/30 p-4">
-            <div className="mb-2 font-medium text-red-300">
-              Invalid deck &mdash; {result.errors.length} error{result.errors.length === 1 ? "" : "s"} found
+          <Card accent="border-l-rose-600" className="border-rose-900/70 bg-rose-950/25 p-5">
+            <div className="mb-2.5 font-display text-lg font-semibold text-rose-300">
+              Invalid deck &mdash; {result.errors.length} error
+              {result.errors.length === 1 ? "" : "s"} found
             </div>
-            <ul className="space-y-1 text-sm text-red-200">
+            <ul className="space-y-1.5 text-sm text-rose-100">
               {result.errors.map((err, i) => (
-                <li key={i} className="font-mono">
-                  <span className="text-red-400">{err.path}</span>: {err.message}
+                <li key={i} className="font-mono leading-snug">
+                  <span className="text-rose-400">{err.path}</span>: {err.message}
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
         )}
 
         {result && result.valid && result.deck && (
-          <div className="rounded-lg border border-emerald-800 bg-emerald-950/30 p-4">
-            <div className="mb-2 font-medium text-emerald-300">Valid deck</div>
-            <div className="mb-3 space-y-1 text-sm text-emerald-100">
+          <Card accent="border-l-emerald-500" className="border-emerald-900/70 bg-emerald-950/25 p-5">
+            <div className="mb-3 font-display text-lg font-semibold text-emerald-300">Valid deck</div>
+            <dl className="mb-4 grid grid-cols-1 gap-x-6 gap-y-2 text-sm text-emerald-50 sm:grid-cols-2">
               <div>
-                <span className="text-emerald-400">Name:</span> {result.deck.name}
+                <dt className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                  Name
+                </dt>
+                <dd>{result.deck.name}</dd>
               </div>
               <div>
-                <span className="text-emerald-400">ID:</span> {result.deck.id}
+                <dt className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                  ID
+                </dt>
+                <dd className="font-mono">{result.deck.id}</dd>
               </div>
               <div>
-                <span className="text-emerald-400">Drinks:</span> {result.deck.drinks.length}
+                <dt className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                  Drinks
+                </dt>
+                <dd className="tabular-nums">{result.deck.drinks.length}</dd>
               </div>
               <div>
-                <span className="text-emerald-400">Tiers:</span>{" "}
-                {tierBreakdown.map(([tier, count]) => `Tier ${tier}: ${count}`).join(", ")}
+                <dt className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                  Tiers
+                </dt>
+                <dd className="tabular-nums">
+                  {tierBreakdown.map(([tier, count]) => `Tier ${tier}: ${count}`).join(", ")}
+                </dd>
               </div>
-            </div>
+            </dl>
 
-            <div className="mb-3 rounded-lg border border-neutral-800 bg-neutral-900/50 p-3 text-sm text-neutral-300">
-              <p className="mb-1">To install this deck:</p>
-              <ol className="list-inside list-decimal space-y-1">
+            <div className="mb-4 rounded-2xl border border-ink-800 bg-ink-900/70 p-4 text-sm leading-relaxed text-ink-300">
+              <p className="mb-1.5 font-medium text-ink-200">To install this deck:</p>
+              <ol className="list-inside list-decimal space-y-1.5 marker:text-brass-500">
                 <li>
                   Copy the formatted JSON below and save it as{" "}
-                  <code className="rounded bg-black/30 px-1">
+                  <code className="rounded-md bg-ink-850 px-1.5 py-0.5 font-mono text-xs text-brass-300">
                     data/decks/{result.deck.id}.json
                   </code>
                 </li>
-                <li>Restart &mdash; the dev server (npm run dev) &mdash; the deck loader picks up any file in that folder automatically.</li>
+                <li>
+                  Restart &mdash; the dev server (npm run dev) &mdash; the deck loader picks up any file
+                  in that folder automatically.
+                </li>
               </ol>
             </div>
 
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="min-h-[44px] rounded-lg border border-emerald-700 bg-emerald-900/40 px-4 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-900/60 active:bg-emerald-900/80"
-            >
+            <Button variant="success" size="lg" onClick={handleCopy}>
               {copied ? "Copied!" : "Copy formatted JSON"}
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
       </div>
     </Layout>

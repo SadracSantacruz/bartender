@@ -53,13 +53,13 @@ function BuildCard({ drink, className = "" }: { drink: Drink; className?: string
   const fields = DRINK_FIELDS.filter((f) => isFieldDocumented(drink, f));
   return (
     <Card className={`p-5 ${className}`}>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
         {fields.map((field) => (
           <div key={field} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-brass-500">
               {FIELD_LABELS[field]}
             </span>
-            <span className="text-base leading-snug text-neutral-100">
+            <span className="text-lg font-medium leading-snug text-ink-100">
               {getFieldValue(drink, field)}
             </span>
           </div>
@@ -73,8 +73,8 @@ function UnverifiedBadge({ drink }: { drink: Drink }) {
   if (!drink.verify) return null;
   return (
     <div className="mt-3 space-y-1">
-      <Badge className="border-amber-800 bg-amber-950/50 text-amber-400">unverified</Badge>
-      <p className="text-xs leading-relaxed text-amber-400">{drink.verify}</p>
+      <Badge className="border-amber-600/60 bg-amber-950/60 text-amber-300">unverified</Badge>
+      <p className="text-xs leading-relaxed text-amber-200/90">{drink.verify}</p>
     </div>
   );
 }
@@ -127,7 +127,7 @@ export default function ReverseRecall() {
       <Layout title="Reverse Recall">
         <EmptyState title="No drinks in this pool">
           No drinks match your current selection. Go back{" "}
-          <button className="text-emerald-400 underline" onClick={() => navigate("home")}>
+          <button className="font-medium text-brass-400 underline underline-offset-2" onClick={() => navigate("home")}>
             Home
           </button>{" "}
           and pick a deck.
@@ -187,14 +187,16 @@ export default function ReverseRecall() {
       <Layout title="Reverse Recall">
         <div className="space-y-6">
           <Card accent="border-l-emerald-600" className="p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
               Round complete
             </p>
-            <div className={`mt-2 text-5xl font-bold tabular-nums ${accuracyText(pct)}`}>
+            <div
+              className={`mt-2 font-display text-5xl font-bold tabular-nums ${accuracyText(pct)}`}
+            >
               {correctCount}
-              <span className="text-2xl font-semibold text-neutral-500">/{round.length}</span>
+              <span className="text-2xl font-semibold text-ink-500">/{round.length}</span>
             </div>
-            <p className="mt-1 text-sm text-neutral-400">correct</p>
+            <p className="mt-1 text-sm text-ink-400">correct</p>
             <ProgressBar pct={pct} className="mt-4" />
           </Card>
 
@@ -202,26 +204,26 @@ export default function ReverseRecall() {
             <div>
               <SectionTitle
                 right={
-                  <span className="text-xs tabular-nums text-neutral-500">{missed.length}</span>
+                  <span className="text-xs tabular-nums text-ink-400">{missed.length}</span>
                 }
               >
                 Missed
               </SectionTitle>
               <div className="space-y-3">
                 {missed.map((m, i) => (
-                  <Card key={i} accent="border-l-red-700" className="p-4">
-                    <div className="text-lg font-semibold text-neutral-50">
+                  <Card key={i} accent="border-l-rose-600" className="p-4">
+                    <div className="font-display text-xl font-semibold text-ink-100">
                       {m.deckDrink.drink.name}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <Badge className="border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                      <Badge className="border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
                         {m.deckDrink.deck.name}
                       </Badge>
                     </div>
-                    <p className="mt-2 text-sm text-neutral-400">
-                      Your guess: <span className="text-red-300">{m.guess || "(blank)"}</span>
+                    <p className="mt-2 text-sm text-ink-400">
+                      Your guess: <span className="text-rose-300">{m.guess || "(blank)"}</span>
                     </p>
-                    <BuildCard drink={m.deckDrink.drink} className="mt-3 bg-neutral-950/40" />
+                    <BuildCard drink={m.deckDrink.drink} className="mt-3 bg-ink-950/40" />
                     <UnverifiedBadge drink={m.deckDrink.drink} />
                   </Card>
                 ))}
@@ -248,17 +250,18 @@ export default function ReverseRecall() {
       <div className="space-y-4">
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
-              Question {index + 1} of {round.length}
+            <span className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
+              Question <span className="tabular-nums">{index + 1}</span> of{" "}
+              <span className="tabular-nums">{round.length}</span>
             </span>
-            <span className="text-xs tabular-nums text-neutral-500">
+            <span className="text-xs tabular-nums text-ink-400">
               {index - missed.length + (canAdvance ? 1 : 0)} correct
             </span>
           </div>
-          <ProgressBar pct={((index + (canAdvance ? 1 : 0)) / round.length) * 100} />
+          <ProgressBar tone="brand" pct={((index + (canAdvance ? 1 : 0)) / round.length) * 100} />
         </div>
 
-        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brass-500">
           Name this build
         </p>
 
@@ -275,26 +278,26 @@ export default function ReverseRecall() {
             }}
             disabled={result !== null}
             placeholder="Name this drink..."
-            className="min-h-[56px] w-full rounded-xl border-2 border-neutral-700 bg-neutral-900 px-4 py-3 text-lg text-neutral-100 placeholder-neutral-600 outline-none transition-colors duration-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-70"
+            className="min-h-[60px] w-full rounded-xl border-2 border-ink-700 bg-ink-900/80 px-4 py-3 font-display text-xl text-ink-100 shadow-inner shadow-black/30 outline-none transition-colors duration-100 placeholder:font-sans placeholder:text-base placeholder:text-ink-500 focus:border-brass-500 focus:ring-2 focus:ring-brass-500/30 disabled:opacity-70"
           />
         </div>
 
         {result === null && (
           <Button variant="secondary" size="lg" className="w-full" onClick={handleSubmit}>
-            Submit <span className="text-xs text-neutral-500">(Enter)</span>
+            Submit <span className="text-xs font-normal text-ink-400">(Enter)</span>
           </Button>
         )}
 
         {result === "exact" && (
-          <Card accent="border-l-emerald-500" className="bg-emerald-950/40 p-4">
+          <Card accent="border-l-emerald-500" glow className="bg-emerald-950/50 p-5">
             <div className="flex items-start gap-3">
               <span className="text-2xl leading-none text-emerald-400">&#10003;</span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400">
                   Correct
                 </p>
-                <p className="mt-0.5 text-xl font-semibold text-emerald-200">{drink.name}</p>
-                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                <p className="mt-1 font-display text-2xl font-semibold text-emerald-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
                   {deck.name}
                 </Badge>
                 <UnverifiedBadge drink={drink} />
@@ -304,15 +307,15 @@ export default function ReverseRecall() {
         )}
 
         {result === "wrong" && (
-          <Card accent="border-l-red-500" className="bg-red-950/40 p-4">
+          <Card accent="border-l-rose-500" className="bg-rose-950/50 p-5">
             <div className="flex items-start gap-3">
-              <span className="text-2xl leading-none text-red-400">&#10007;</span>
+              <span className="text-2xl leading-none text-rose-400">&#10007;</span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-rose-400">
                   Not quite &mdash; correct answer
                 </p>
-                <p className="mt-0.5 text-xl font-semibold text-red-100">{drink.name}</p>
-                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                <p className="mt-1 font-display text-2xl font-semibold text-rose-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
                   {deck.name}
                 </Badge>
                 <UnverifiedBadge drink={drink} />
@@ -322,11 +325,11 @@ export default function ReverseRecall() {
         )}
 
         {result === "close-pending" && (
-          <Card accent="border-l-amber-500" className="bg-amber-950/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500">
+          <Card accent="border-l-amber-500" className="bg-amber-950/50 p-5">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">
               Close &mdash; check spelling
             </p>
-            <p className="mt-0.5 text-xl font-semibold text-amber-100">{drink.name}</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-amber-100">{drink.name}</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Button variant="primary" size="lg" onClick={() => handleSelfGrade(true)}>
                 Count as correct
@@ -339,15 +342,15 @@ export default function ReverseRecall() {
         )}
 
         {result === "close-correct" && (
-          <Card accent="border-l-emerald-500" className="bg-emerald-950/40 p-4">
+          <Card accent="border-l-emerald-500" glow className="bg-emerald-950/50 p-5">
             <div className="flex items-start gap-3">
               <span className="text-2xl leading-none text-emerald-400">&#10003;</span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400">
                   Marked correct
                 </p>
-                <p className="mt-0.5 text-xl font-semibold text-emerald-200">{drink.name}</p>
-                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                <p className="mt-1 font-display text-2xl font-semibold text-emerald-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
                   {deck.name}
                 </Badge>
                 <UnverifiedBadge drink={drink} />
@@ -357,15 +360,15 @@ export default function ReverseRecall() {
         )}
 
         {result === "close-wrong" && (
-          <Card accent="border-l-red-500" className="bg-red-950/40 p-4">
+          <Card accent="border-l-rose-500" className="bg-rose-950/50 p-5">
             <div className="flex items-start gap-3">
-              <span className="text-2xl leading-none text-red-400">&#10007;</span>
+              <span className="text-2xl leading-none text-rose-400">&#10007;</span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-rose-400">
                   Marked wrong &mdash; correct answer
                 </p>
-                <p className="mt-0.5 text-xl font-semibold text-red-100">{drink.name}</p>
-                <Badge className="mt-2 border-fuchsia-800 bg-fuchsia-950/40 text-fuchsia-300">
+                <p className="mt-1 font-display text-2xl font-semibold text-rose-100">{drink.name}</p>
+                <Badge className="mt-2 border-fuchsia-700/70 bg-fuchsia-950/50 text-fuchsia-300">
                   {deck.name}
                 </Badge>
                 <UnverifiedBadge drink={drink} />
@@ -377,7 +380,7 @@ export default function ReverseRecall() {
         {canAdvance && (
           <Button variant="secondary" size="lg" className="w-full" onClick={goNext}>
             {index + 1 >= round.length ? "See results" : "Next"}
-            <span className="text-xs text-neutral-500">(Space)</span>
+            <span className="text-xs font-normal text-ink-400">(Space)</span>
           </Button>
         )}
       </div>
