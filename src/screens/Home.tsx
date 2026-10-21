@@ -9,6 +9,7 @@ import { accuracyText, Badge, Button, Card, Chip, ProgressBar, SectionTitle } fr
 const MODES: Array<{ screen: Screen; label: string; desc: string }> = [
   { screen: "browse", label: "Browse", desc: "Search every drink, not a quiz" },
   { screen: "review", label: "Review", desc: "Flashcards for drinks you haven't nailed yet" },
+  { screen: "weak", label: "Don't Got It", desc: "Drill only drinks you rated Don't got it or Kind of" },
   { screen: "mc", label: "Multiple Choice", desc: "4 options, one field at a time" },
   { screen: "fullbuild", label: "Full Build Recall", desc: "Fill in the whole build, self-graded" },
   { screen: "reverse", label: "Reverse Recall", desc: "See the build, name the drink" },
@@ -66,6 +67,7 @@ export default function Home() {
   const stats = useProgressStore((s) => s.stats);
   const savedDrinks = useProgressStore((s) => s.savedDrinks);
   const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
+  const confidence = useProgressStore((s) => s.confidence);
 
   const hasProgress = Object.keys(stats).length > 0;
 
@@ -106,6 +108,16 @@ export default function Home() {
     // `stats`/`savedDrinks` aren't read directly here, but they drive the
     // getState() reads above, so they belong in the dependency list.
   }, [selectedDecks, tierFilter, categoryFilter, skippedDrinks, stats, savedDrinks]);
+
+  // Drinks the "Don't Got It" mode would drill for the current selection.
+  const weakCount = useMemo(() => {
+    let count = 0;
+    for (const { deck, drink } of getFilteredDrinks(selectedDecks, tierFilter, categoryFilter, skippedDrinks)) {
+      const level = confidence[`${deck.id}:${drink.id}`];
+      if (level === "nope" || level === "kinda") count++;
+    }
+    return count;
+  }, [selectedDecks, tierFilter, categoryFilter, skippedDrinks, confidence]);
 
   return (
     <div className="min-h-screen text-ink-100">
@@ -321,7 +333,12 @@ export default function Home() {
                       <div className="font-display text-base font-semibold tracking-tight text-ink-100">
                         {mode.label}
                       </div>
-                      <div className="mt-0.5 text-sm leading-snug text-ink-400">{mode.desc}</div>
+                      <div className="mt-0.5 text-sm leading-snug text-ink-400">
+                        {mode.desc}
+                        {mode.screen === "weak" && hasSelection && (
+                          <span className="tabular-nums text-ink-500"> · {weakCount} to drill</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}

@@ -5,6 +5,7 @@ export type Screen =
   | "home"
   | "browse"
   | "review"
+  | "weak"
   | "mc"
   | "fullbuild"
   | "reverse"

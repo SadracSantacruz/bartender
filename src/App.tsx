@@ -19,7 +19,9 @@ function App() {
     case "browse":
       return <Browse />;
     case "review":
-      return <Review />;
+      return <Review key="review" />;
+    case "weak":
+      return <Review key="weak" source="rated" />;
     case "mc":
       return <MultipleChoice />;
     case "fullbuild":

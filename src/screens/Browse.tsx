@@ -7,6 +7,7 @@ import { getFilteredDrinks, type DeckDrink } from "../lib/quiz";
 import { baseColorFor, baseGroupFor } from "../lib/baseColors";
 import { DRINK_FIELDS, type DrinkField } from "../types";
 import { Badge, Button, Card, Chip, EmptyState } from "../components/ui";
+import { CONFIDENCE_ACTIVE, CONFIDENCE_LABELS } from "../lib/confidence";
 
 const TIER_STYLES: Record<number, string> = {
   1: "border-emerald-700 bg-emerald-950/60 text-emerald-300",
@@ -28,18 +29,6 @@ const FIELD_LABELS: Record<DrinkField, string> = {
   garnish: "Garnish",
   ingredients: "Ingredients",
   prep: "Prep",
-};
-
-const CONFIDENCE_LABELS: Record<Confidence, string> = {
-  got: "Got it",
-  kinda: "Kind of got it",
-  nope: "Don't got it",
-};
-
-const CONFIDENCE_ACTIVE: Record<Confidence, string> = {
-  got: "border-emerald-600 bg-emerald-900/40 text-emerald-200",
-  kinda: "border-yellow-600 bg-yellow-900/40 text-yellow-200",
-  nope: "border-rose-600 bg-rose-900/40 text-rose-200",
 };
 
 export default function Browse() {

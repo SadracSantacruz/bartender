@@ -76,6 +76,7 @@ interface ProgressState {
 
   /** Self-rated "got it / kind of / don't got it" per drink. Absent = not rated. */
   confidence: Record<string, Confidence>;
+  setConfidence: (deckId: string, drinkId: string, level: Confidence) => void;
   /** Set a rating; picking the current rating again clears it. */
   toggleConfidence: (deckId: string, drinkId: string, level: Confidence) => void;
 
@@ -184,6 +185,10 @@ export const useProgressStore = create<ProgressState>()(
       },
 
       confidence: {},
+
+      setConfidence: (deckId, drinkId, level) => {
+        set((s) => ({ confidence: { ...s.confidence, [statKey(deckId, drinkId)]: level } }));
+      },
 
       toggleConfidence: (deckId, drinkId, level) => {
         set((s) => {
