@@ -1,5 +1,6 @@
 import type { DrinkField } from "../types";
-import type { DrinkStats } from "../store/progressStore";
+import type { Confidence, DrinkStats } from "../store/progressStore";
+import { CONFIDENCE_LEVELS } from "../store/progressStore";
 
 /**
  * Save-file format. There's no backend, so a user's progress lives in
@@ -21,6 +22,7 @@ export interface SaveFile {
   skippedDrinks: Record<string, true>;
   personalNotes: Record<string, string>;
   shakyFields: Record<string, DrinkField[]>;
+  confidence: Record<string, Confidence>;
 }
 
 export interface SavePayload {
@@ -29,6 +31,7 @@ export interface SavePayload {
   skippedDrinks: Record<string, true>;
   personalNotes: Record<string, string>;
   shakyFields: Record<string, DrinkField[]>;
+  confidence: Record<string, Confidence>;
 }
 
 export function buildSaveFile(payload: SavePayload, now: Date): SaveFile {
@@ -41,6 +44,7 @@ export function buildSaveFile(payload: SavePayload, now: Date): SaveFile {
     skippedDrinks: payload.skippedDrinks,
     personalNotes: payload.personalNotes,
     shakyFields: payload.shakyFields,
+    confidence: payload.confidence,
   };
 }
 
@@ -144,6 +148,17 @@ function parseFieldListMap(raw: unknown): Record<string, DrinkField[]> | null {
   return out;
 }
 
+// Optional: saves exported before self-ratings existed have no `confidence` key.
+function parseConfidenceMap(raw: unknown): Record<string, Confidence> | null {
+  if (raw === undefined) return {};
+  if (!isPlainObject(raw)) return null;
+  const out: Record<string, Confidence> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (CONFIDENCE_LEVELS.includes(value as Confidence)) out[key] = value as Confidence;
+  }
+  return out;
+}
+
 export function parseSaveFile(text: string): ParseResult {
   let raw: unknown;
   try {
@@ -180,8 +195,9 @@ export function parseSaveFile(text: string): ParseResult {
   const skippedDrinks = parseFlagMap(raw.skippedDrinks);
   const personalNotes = parseStringMap(raw.personalNotes);
   const shakyFields = parseFieldListMap(raw.shakyFields);
+  const confidence = parseConfidenceMap(raw.confidence);
 
-  if (!savedDrinks || !skippedDrinks || !personalNotes || !shakyFields) {
+  if (!savedDrinks || !skippedDrinks || !personalNotes || !shakyFields || !confidence) {
     return { ok: false, error: "The save file's flags or notes are malformed." };
   }
 
@@ -196,6 +212,7 @@ export function parseSaveFile(text: string): ParseResult {
       skippedDrinks,
       personalNotes,
       shakyFields,
+      confidence,
     },
   };
 }
@@ -220,6 +237,7 @@ export function mergeSaves(current: SavePayload, incoming: SavePayload): SavePay
     skippedDrinks: { ...current.skippedDrinks, ...incoming.skippedDrinks },
     personalNotes: { ...current.personalNotes, ...incoming.personalNotes },
     shakyFields: { ...current.shakyFields, ...incoming.shakyFields },
+    confidence: { ...current.confidence, ...incoming.confidence },
   };
 }
 

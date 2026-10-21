@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Layout } from "../components/Layout";
 import { LOADED_DECKS } from "../lib/deckLoader";
 import { useAppStore } from "../store/appStore";
-import { useProgressStore } from "../store/progressStore";
+import { CONFIDENCE_LEVELS, useProgressStore, type Confidence } from "../store/progressStore";
 import { getFilteredDrinks, type DeckDrink } from "../lib/quiz";
 import { baseColorFor, baseGroupFor } from "../lib/baseColors";
 import { DRINK_FIELDS, type DrinkField } from "../types";
@@ -30,12 +30,25 @@ const FIELD_LABELS: Record<DrinkField, string> = {
   prep: "Prep",
 };
 
+const CONFIDENCE_LABELS: Record<Confidence, string> = {
+  got: "Got it",
+  kinda: "Kind of got it",
+  nope: "Don't got it",
+};
+
+const CONFIDENCE_ACTIVE: Record<Confidence, string> = {
+  got: "border-emerald-600 bg-emerald-900/40 text-emerald-200",
+  kinda: "border-yellow-600 bg-yellow-900/40 text-yellow-200",
+  nope: "border-rose-600 bg-rose-900/40 text-rose-200",
+};
+
 export default function Browse() {
   const selectedDeckIds = useAppStore((s) => s.selectedDeckIds);
   const tierFilter = useAppStore((s) => s.tierFilter);
   const categoryFilter = useAppStore((s) => s.categoryFilter);
   const savedDrinks = useProgressStore((s) => s.savedDrinks);
   const skippedDrinks = useProgressStore((s) => s.skippedDrinks);
+  const confidence = useProgressStore((s) => s.confidence);
   const [query, setQuery] = useState("");
   const [baseGroup, setBaseGroup] = useState<string | "all">("all");
   const [category, setCategory] = useState<string | "all">("all");
@@ -43,6 +56,7 @@ export default function Browse() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [skippedOnly, setSkippedOnly] = useState(false);
   const [hideSkipped, setHideSkipped] = useState(false);
+  const [knowFilter, setKnowFilter] = useState<Confidence | "unrated" | "all">("all");
   // Collapsed by default: on a phone the filter panel is a full screen of chips,
   // and the common case is scrolling/searching drinks, not filtering.
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -53,7 +67,8 @@ export default function Browse() {
     (category !== "all" ? 1 : 0) +
     (savedOnly ? 1 : 0) +
     (skippedOnly ? 1 : 0) +
-    (hideSkipped ? 1 : 0);
+    (hideSkipped ? 1 : 0) +
+    (knowFilter !== "all" ? 1 : 0);
 
   function clearFilters() {
     setDeckId("all");
@@ -62,6 +77,7 @@ export default function Browse() {
     setSavedOnly(false);
     setSkippedOnly(false);
     setHideSkipped(false);
+    setKnowFilter("all");
   }
 
   const decks = useMemo(
@@ -94,6 +110,10 @@ export default function Browse() {
       if (savedOnly && !savedDrinks[key]) return false;
       if (skippedOnly && !skippedDrinks[key]) return false;
       if (hideSkipped && skippedDrinks[key]) return false;
+      if (knowFilter === "unrated" && confidence[key]) return false;
+      if (knowFilter !== "all" && knowFilter !== "unrated" && confidence[key] !== knowFilter) {
+        return false;
+      }
       if (baseGroup !== "all" && baseGroupFor(drink.base) !== baseGroup) return false;
       if (category !== "all" && drink.category !== category) return false;
       if (!q) return true;
@@ -117,6 +137,8 @@ export default function Browse() {
     skippedOnly,
     hideSkipped,
     skippedDrinks,
+    knowFilter,
+    confidence,
   ]);
 
   if (pool.length === 0) {
@@ -132,6 +154,8 @@ export default function Browse() {
 
   const savedCount = pool.filter(({ deck, drink }) => savedDrinks[`${deck.id}:${drink.id}`]).length;
   const skippedCount = pool.filter(({ deck, drink }) => skippedDrinks[`${deck.id}:${drink.id}`]).length;
+  const confidenceCounts: Record<Confidence | "unrated", number> = { got: 0, kinda: 0, nope: 0, unrated: 0 };
+  for (const { deck, drink } of pool) confidenceCounts[confidence[`${deck.id}:${drink.id}`] ?? "unrated"]++;
 
   return (
     <Layout title="Browse">
@@ -240,6 +264,26 @@ export default function Browse() {
                 label="Hide skipped"
               />
             </FilterRow>
+
+            <FilterRow label="Know it">
+              <Chip active={knowFilter === "all"} onClick={() => setKnowFilter("all")} label="Any" />
+              {CONFIDENCE_LEVELS.map((level) => (
+                <Chip
+                  key={level}
+                  active={knowFilter === level}
+                  onClick={() => setKnowFilter(knowFilter === level ? "all" : level)}
+                  label={CONFIDENCE_LABELS[level]}
+                  count={confidenceCounts[level]}
+                  activeClass={CONFIDENCE_ACTIVE[level]}
+                />
+              ))}
+              <Chip
+                active={knowFilter === "unrated"}
+                onClick={() => setKnowFilter(knowFilter === "unrated" ? "all" : "unrated")}
+                label="Not rated"
+                count={confidenceCounts.unrated}
+              />
+            </FilterRow>
           </Card>
 
           <p className="text-sm text-ink-400">
@@ -290,6 +334,8 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
   const storedNote = useProgressStore((s) => s.personalNotes[key] ?? "");
   const shakyFields = useProgressStore((s) => s.shakyFields[key] ?? NO_SHAKY_FIELDS);
   const toggleShakyField = useProgressStore((s) => s.toggleShakyField);
+  const rating = useProgressStore((s) => s.confidence[key]);
+  const toggleConfidence = useProgressStore((s) => s.toggleConfidence);
   const color = baseColorFor(drink.base);
 
   const [noteDraft, setNoteDraft] = useState(storedNote);
@@ -384,6 +430,32 @@ function DrinkCard({ deckDrink }: { deckDrink: DeckDrink }) {
           {drink.verify}
         </p>
       )}
+
+      <div className="mt-4">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
+          Do I know it?
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {CONFIDENCE_LEVELS.map((level) => {
+            const active = rating === level;
+            return (
+              <button
+                key={level}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleConfidence(deck.id, drink.id, level)}
+                className={`min-h-[44px] rounded-xl border px-2 py-2 text-xs font-medium leading-tight sm:text-sm transition-colors duration-100 ${
+                  active
+                    ? CONFIDENCE_ACTIVE[level]
+                    : "border-ink-700 bg-ink-850/80 text-ink-300 hover:border-ink-600 hover:text-ink-100"
+                }`}
+              >
+                {CONFIDENCE_LABELS[level]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="mt-4 rounded-xl border border-ink-800 bg-ink-950/50 p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-400">

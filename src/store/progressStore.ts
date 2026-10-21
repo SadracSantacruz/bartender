@@ -21,6 +21,18 @@ export interface DrinkStats {
   fields: Partial<Record<DrinkField, FieldStat>>;
 }
 
+/** How well the user feels they know a drink, self-rated from Browse. */
+export type Confidence = "got" | "kinda" | "nope";
+export const CONFIDENCE_LEVELS: Confidence[] = ["got", "kinda", "nope"];
+
+// Self-rating nudges quiz draw weight: drinks you say you don't know come up
+// more, drinks you say you've got come up less (but never disappear).
+const CONFIDENCE_WEIGHT: Record<Confidence, number> = {
+  got: 0.5,
+  kinda: 1.5,
+  nope: 3,
+};
+
 function statKey(deckId: string, drinkId: string): string {
   return `${deckId}:${drinkId}`;
 }
@@ -61,6 +73,11 @@ interface ProgressState {
   shakyFields: Record<string, DrinkField[]>;
   toggleShakyField: (deckId: string, drinkId: string, field: DrinkField) => void;
   getShakyFields: (deckId: string, drinkId: string) => DrinkField[];
+
+  /** Self-rated "got it / kind of / don't got it" per drink. Absent = not rated. */
+  confidence: Record<string, Confidence>;
+  /** Set a rating; picking the current rating again clears it. */
+  toggleConfidence: (deckId: string, drinkId: string, level: Confidence) => void;
 
   getStats: (deckId: string, drinkId: string) => DrinkStats;
   recordResult: (deckId: string, drinkId: string, correct: boolean, field?: DrinkField) => void;
@@ -166,6 +183,21 @@ export const useProgressStore = create<ProgressState>()(
         return get().shakyFields[statKey(deckId, drinkId)] ?? [];
       },
 
+      confidence: {},
+
+      toggleConfidence: (deckId, drinkId, level) => {
+        set((s) => {
+          const key = statKey(deckId, drinkId);
+          const confidence = { ...s.confidence };
+          if (confidence[key] === level) {
+            delete confidence[key];
+          } else {
+            confidence[key] = level;
+          }
+          return { confidence };
+        });
+      },
+
       getStats: (deckId, drinkId) => {
         return get().stats[statKey(deckId, drinkId)] ?? emptyStats();
       },
@@ -206,7 +238,9 @@ export const useProgressStore = create<ProgressState>()(
         const overdueBoost = dueSince > 0 ? 3 : 1;
         const boxWeight = 6 - stats.leitnerBox; // box 1 = weight 5, box 5 = weight 1
         const tierWeight = tier === 1 ? 3 : tier === 2 ? 2 : 1;
-        return overdueBoost * boxWeight * tierWeight;
+        const rating = get().confidence[statKey(deckId, drinkId)];
+        const confidenceWeight = rating ? CONFIDENCE_WEIGHT[rating] : 1;
+        return overdueBoost * boxWeight * tierWeight * confidenceWeight;
       },
 
       getMasteryPercent: (keys) => {
@@ -264,6 +298,7 @@ export const useProgressStore = create<ProgressState>()(
           skippedDrinks: {},
           personalNotes: {},
           shakyFields: {},
+          confidence: {},
         }),
 
       exportPayload: () => {
@@ -274,6 +309,7 @@ export const useProgressStore = create<ProgressState>()(
           skippedDrinks: s.skippedDrinks,
           personalNotes: s.personalNotes,
           shakyFields: s.shakyFields,
+          confidence: s.confidence,
         };
       },
 
@@ -284,6 +320,7 @@ export const useProgressStore = create<ProgressState>()(
           skippedDrinks: payload.skippedDrinks,
           personalNotes: payload.personalNotes,
           shakyFields: payload.shakyFields,
+          confidence: payload.confidence,
         }),
     }),
     { name: "bar-drill-progress" }

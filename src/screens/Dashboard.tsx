@@ -342,7 +342,7 @@ export default function Dashboard() {
           ) : (
             <Card accent="border-l-rose-600" className="border-rose-900/70 bg-rose-950/30 p-5">
               <p className="mb-3 text-sm leading-relaxed text-rose-200">
-                This wipes all mastery data, saved/skipped flags, and personal notes in this browser.
+                This wipes all mastery data, saved/skipped flags, "Do I know it?" ratings, and personal notes in this browser.
                 It cannot be undone — export a save file first if you might want it back.
               </p>
               <div className="flex flex-wrap gap-2">
